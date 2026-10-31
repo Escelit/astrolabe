@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://astrolabe.dev/schemas/acf-v0.1-vector.schema.json",
+  "title": "Astrolabe Canonical Format (ACF v0.1) Conformance Test Vectors",
+  "description": "Schema for conformance test vector files defined in ACF Specification Section 12. Each file is a non-empty array of vector objects.",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "$ref": "#/$defs/vector"
+  },
+  "$defs": {
+    "errorCode": {
+      "type": "string",
+      "description": "Stable ACF error code defined in ACF Specification Section 11.",
+      "enum": [
+        "ERR_BAD_LENGTH",
+        "ERR_NON_CANONICAL_FIELD",
+        "ERR_NOT_ON_CURVE",
+        "ERR_NOT_IN_SUBGROUP",
+        "ERR_PUBLIC_INPUT_COUNT",
+        "ERR_INVALID_PROOF",
+        "ERR_UNSUPPORTED",
+        "ERR_TRAILING_BYTES",
+        "ERR_MALFORMED_INPUT"
+      ]
+    },
+    "expected": {
+      "description": "Expected outcome of executing the vector operation.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["ok"],
+          "additionalProperties": false,
+          "properties": {
+            "ok": {
+              "const": true
+            },
+            "output_hex": {
+              "type": "string",
+              "pattern": "^([0-9a-f]{2})*$",
+              "description": "Optional expected lowercase hex output without 0x prefix (Spec Section 6)."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["ok", "error"],
+          "additionalProperties": false,
+          "properties": {
+            "ok": {
+              "const": false
+            },
+            "error": {
+              "$ref": "#/$defs/errorCode"
+            }
+          }
+        }
+      ]
+    },
+    "vector": {
+      "type": "object",
+      "required": [
+        "id",
+        "description",
+        "operation",
+        "input_hex",
+        "expected",
+        "tags"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "Unique kebab-case identifier for the test vector."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable description including the independent source of the vector (Spec Section 12, AGENTS.md Section 7)."
+        },
+        "operation": {
+          "type": "string",
+          "minLength": 1,
+          "examples": ["decode_g1"],
+          "description": "Operation under test (Spec Section 12)."
+        },
+        "input_hex": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{2})*$",
+          "description": "Lowercase hex-encoded input payload without 0x prefix (Spec Sections 6 and 12)."
+        },
+        "expected": {
+          "$ref": "#/$defs/expected"
+        },
+        "tags": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Category and feature tags (Spec Section 12)."
+        },
+        "tx_hash": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional Stellar testnet transaction hash for vectors in the onchain/ category (Spec Section 12)."
+        }
+      }
+    }
+  }
+}
