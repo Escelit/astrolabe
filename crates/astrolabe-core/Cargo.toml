@@ -1,0 +1,9 @@
+[package]
+name = "astrolabe-core"
+description = "Astrolabe Canonical Format (ACF) core encoding, validation, and error types (no_std)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]

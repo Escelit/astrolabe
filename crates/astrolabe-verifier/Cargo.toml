@@ -1,0 +1,9 @@
+[package]
+name = "astrolabe-verifier"
+description = "Soroban contract helpers and Groth16 verifier template for Astrolabe"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]

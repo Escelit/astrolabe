@@ -1,0 +1,14 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# Node / pnpm / TypeScript
+node_modules/
+dist/
+.pnpm-store/
+*.tsbuildinfo
+coverage/
+.vitest/
+
+# OS / Editor
+.DS_Store
