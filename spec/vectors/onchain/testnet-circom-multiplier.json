@@ -1,0 +1,35 @@
+[
+  {
+    "id": "testnet-circom-multiplier-proof-verified",
+    "description": "Groth16 proof (256 bytes, Fp2 order c1 || c0) for Circom 2.2.3 Multiplier2 (c = 33, a = 3) verified on Stellar Testnet Protocol 29 via contract CBWJBCNFY2ZKBSQIS3BFJ4LGRQO2QTKQ7VOWEUNETTOGKUP4OXZ54TF4 (wasm hash b782ef50e908a50c1f74e5edd047fc188bad4b82f54120c3acae0690f3a20462). Source: snarkjs 0.7.6 + Stellar Testnet execution.",
+    "operation": "decode_proof",
+    "input_hex": "0d7878bb471f16e0e8366778a28829db4d5ff09baf9517695cd0d23cd2c1b2e80f0e8336dd5bd193b1918a13dce96010b06db87f9d99af62e28eb1d134124d58100792e3175ff2f52bb403fb1b33eb62db1e30b06dea369186faaaaae25f6b7427108db79d78a66e9de40d156b0afd421265f7c50e53aa068a896698fb586ac10fe25410b2b341224247825bd25acce576201d3d828781ffe6ca4a5c81b3e35609d861e52f7de282f16a79f0b0d895a19e063af5c3a265ecbcf9f65c1598acd206e4d97e80404e4de3d846689cb020de2e02d2594bd93c19a7ccea4241f336092556ecd9998b1858547bed640f06afdb213a0af2ccff62421be219c5546162e8",
+    "expected": {
+      "ok": true
+    },
+    "tags": ["onchain", "testnet", "groth16", "proof", "snarkjs", "circom"],
+    "tx_hash": "3d5683f26ac43c01964b89f8d7d1bdaf2f7a24a23589e437ba7a19f39f87a804"
+  },
+  {
+    "id": "testnet-circom-multiplier-vk-verified",
+    "description": "Groth16 verification key (644 bytes, n_ic = 3, Fp2 order c1 || c0) verified on Stellar Testnet Protocol 29 via contract CBWJBCNFY2ZKBSQIS3BFJ4LGRQO2QTKQ7VOWEUNETTOGKUP4OXZ54TF4. Source: snarkjs 0.7.6 + Stellar Testnet execution.",
+    "operation": "decode_vk",
+    "input_hex": "2c3eca3b96938a231158ff0690bd4af0a7b020cc9bf9ec649bfd1a6f9fedc2841e81947887a20eff0366a4cc56891097b8f2c07f27dd57fd47df7f24aab2e1610c02c8193eedbc72fd4a8fb8422cb4632057134d80413a668c9987719ad27c312a239d5389fe740be6918dcc95e259280368f518df3c77a800925d9d368996e42534e71a3d36a2f7dc927fc673a87299788d7a214f1151f7abf9723c4ee315351d9a94d377c6dc20b8bc05dcb1f9adaa2fabe4c540645eda3c7594b85676990e198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c21800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa2f31a9ffbec70638647f26bc7a49c866fcbf7ac20aa7408e695004da9ef5e25e165ff901385851b84ecf6c366fe61e641b7dab33cb9926e8288d65d36e1689621238f3a5cc6a9c9fe7e18f02041403c1124164ef5b00b7e7ff635a498d09c2420d71091d690ae6268f2db7e7cc97e9e67415ba92e0e90ea2f9172da571523152000000031f9ca84019247d9ea29cc5d1d3cee12b76bbc2385586cdbad63a6cd65addd2e61af0ff10ff1e6b6e4be920f6328ca0f437d45ea4cf9223bb2ef2e38ff1fc6c3111584ff9c88f8138175bd526cd78145da96cba2021e87f8af4c74a24dd82d1a31296a9041b061089d28d65f1a7807316a6927151dd3c359f4f2a8ec71f0a5a602f0776c05fc028592d2a05f66c4798e39eaf595a5a8aebc07bb583d03affd7da09790bda24e938bba6be23e1a7cfdd6bd635e1ed49c5204da7c25ad32354ad19",
+    "expected": {
+      "ok": true
+    },
+    "tags": ["onchain", "testnet", "groth16", "vk", "snarkjs", "circom"],
+    "tx_hash": "3d5683f26ac43c01964b89f8d7d1bdaf2f7a24a23589e437ba7a19f39f87a804"
+  },
+  {
+    "id": "testnet-circom-multiplier-public-inputs-verified",
+    "description": "Groth16 public inputs (64 bytes: s_0 = 33, s_1 = 3) verified on Stellar Testnet Protocol 29 via contract CBWJBCNFY2ZKBSQIS3BFJ4LGRQO2QTKQ7VOWEUNETTOGKUP4OXZ54TF4. Source: snarkjs 0.7.6 + Stellar Testnet execution.",
+    "operation": "decode_public_inputs",
+    "input_hex": "00000000000000000000000000000000000000000000000000000000000000210000000000000000000000000000000000000000000000000000000000000003",
+    "expected": {
+      "ok": true
+    },
+    "tags": ["onchain", "testnet", "groth16", "public-inputs", "snarkjs", "circom"],
+    "tx_hash": "3d5683f26ac43c01964b89f8d7d1bdaf2f7a24a23589e437ba7a19f39f87a804"
+  }
+]
