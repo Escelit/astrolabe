@@ -1,5 +1,6 @@
 # Rust
-/target/
+target/
+test_snapshots/
 **/*.rs.bk
 
 # Node / pnpm / TypeScript
