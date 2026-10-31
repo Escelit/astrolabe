@@ -1,0 +1,6 @@
+{
+  "name": "astrolabe-workspace",
+  "private": true,
+  "license": "MIT OR Apache-2.0",
+  "packageManager": "pnpm@10.28.2"
+}
