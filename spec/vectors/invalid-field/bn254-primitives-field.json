@@ -1,0 +1,168 @@
+[
+  {
+    "id": "fp-equals-modulus-p-invalid",
+    "description": "BN254 base field modulus p itself rejected as non-canonical (x >= p). Source: ACF Spec Section 2, Section 3.1, and ark-bn254 0.5.0 Fq::MODULUS.",
+    "operation": "decode_fp",
+    "input_hex": "30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NON_CANONICAL_FIELD"
+    },
+    "tags": ["fp", "invalid-field", "boundary"]
+  },
+  {
+    "id": "fp-modulus-p-plus-one-invalid",
+    "description": "Non-canonical integer p + 1 rejected rather than reduced to 1. Source: ACF Spec Section 3.1, Section 14, and ark-bn254 0.5.0.",
+    "operation": "decode_fp",
+    "input_hex": "30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd48",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NON_CANONICAL_FIELD"
+    },
+    "tags": ["fp", "invalid-field", "aliasing"]
+  },
+  {
+    "id": "fp-max-u256-invalid",
+    "description": "2^256 - 1 rejected as non-canonical Fp element. Source: ACF Spec Section 3.1.",
+    "operation": "decode_fp",
+    "input_hex": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NON_CANONICAL_FIELD"
+    },
+    "tags": ["fp", "invalid-field"]
+  },
+  {
+    "id": "fr-equals-modulus-r-invalid",
+    "description": "BN254 scalar field modulus r itself rejected as non-canonical (x >= r), never reduced to 0. Source: ACF Spec Section 2, Section 3.4, and Phase 1 Experiment 4.",
+    "operation": "decode_fr",
+    "input_hex": "30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NON_CANONICAL_FIELD"
+    },
+    "tags": ["fr", "invalid-field", "boundary"]
+  },
+  {
+    "id": "fr-modulus-r-plus-one-invalid",
+    "description": "Non-canonical integer r + 1 rejected rather than reduced to 1. Source: ACF Spec Section 3.4 and Phase 1 Experiment 4.",
+    "operation": "decode_fr",
+    "input_hex": "30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000002",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NON_CANONICAL_FIELD"
+    },
+    "tags": ["fr", "invalid-field", "aliasing"]
+  },
+  {
+    "id": "fr-aliased-signal-33-plus-r-invalid",
+    "description": "Aliased public input 33 + r rejected with ERR_NON_CANONICAL_FIELD. Source: Phase 1 Experiment 4 security control against Stellar Testnet TX 7e789d10a2903283dcd48a2dd42377ad17d1981f14eb311043928c746a1edae8.",
+    "operation": "decode_fr",
+    "input_hex": "30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000022",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NON_CANONICAL_FIELD"
+    },
+    "tags": ["fr", "invalid-field", "aliasing", "testnet"],
+    "tx_hash": "7e789d10a2903283dcd48a2dd42377ad17d1981f14eb311043928c746a1edae8"
+  },
+  {
+    "id": "fr-equals-p-minus-one-invalid",
+    "description": "Value p - 1 is canonical in Fp (< p) but non-canonical in Fr (>= r) and MUST be rejected by decode_fr. Source: ACF Spec Section 2 and Section 3.4.",
+    "operation": "decode_fr",
+    "input_hex": "30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd46",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NON_CANONICAL_FIELD"
+    },
+    "tags": ["fr", "invalid-field", "modulus-distinction"]
+  },
+  {
+    "id": "fr-max-u256-invalid",
+    "description": "2^256 - 1 rejected as non-canonical Fr scalar. Source: ACF Spec Section 3.4.",
+    "operation": "decode_fr",
+    "input_hex": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NON_CANONICAL_FIELD"
+    },
+    "tags": ["fr", "invalid-field"]
+  },
+  {
+    "id": "g1-x-equals-p-invalid",
+    "description": "G1 point (p, 2) rejected with ERR_NON_CANONICAL_FIELD before curve equation check. Source: ACF Spec Section 9 Rule 2 and Phase 1 Experiment 2.",
+    "operation": "decode_g1",
+    "input_hex": "30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd470000000000000000000000000000000000000000000000000000000000000002",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NON_CANONICAL_FIELD"
+    },
+    "tags": ["g1", "invalid-field", "precedence"]
+  },
+  {
+    "id": "g1-x-aliased-one-plus-p-invalid",
+    "description": "G1 point (1 + p, 2) whose coordinates satisfy y^2 = x^3 + 3 modulo p if silently reduced; MUST fail with ERR_NON_CANONICAL_FIELD. Source: ACF Spec Section 3.1, 3.2, and Section 9 Rule 2.",
+    "operation": "decode_g1",
+    "input_hex": "30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd480000000000000000000000000000000000000000000000000000000000000002",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NON_CANONICAL_FIELD"
+    },
+    "tags": ["g1", "invalid-field", "aliasing"]
+  },
+  {
+    "id": "g1-y-aliased-two-plus-p-invalid",
+    "description": "G1 point (1, 2 + p) whose coordinates satisfy y^2 = x^3 + 3 modulo p if silently reduced; MUST fail with ERR_NON_CANONICAL_FIELD. Source: ACF Spec Section 3.1, 3.2, and Section 9 Rule 2.",
+    "operation": "decode_g1",
+    "input_hex": "000000000000000000000000000000000000000000000000000000000000000130644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd49",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NON_CANONICAL_FIELD"
+    },
+    "tags": ["g1", "invalid-field", "aliasing"]
+  },
+  {
+    "id": "g2-xc1-aliased-plus-p-invalid",
+    "description": "BN254 G2 generator with x.c1 replaced by x.c1 + p; MUST fail with ERR_NON_CANONICAL_FIELD without modular reduction. Source: ark-bn254 0.5.0 G2Affine::generator() + Fq::MODULUS.",
+    "operation": "decode_g2",
+    "input_hex": "49f2e206733ee8642ab1056db37cb583892bb3c49e1bb19fd40511ce877010091800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NON_CANONICAL_FIELD"
+    },
+    "tags": ["g2", "invalid-field", "aliasing"]
+  },
+  {
+    "id": "g2-xc0-aliased-plus-p-invalid",
+    "description": "BN254 G2 generator with x.c0 replaced by x.c0 + p; MUST fail with ERR_NON_CANONICAL_FIELD without modular reduction. Source: ark-bn254 0.5.0 G2Affine::generator() + Fq::MODULUS.",
+    "operation": "decode_g2",
+    "input_hex": "198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c248652d61f350be9ffaba461cdfdd9cd6fec48d665fd0a56a82ff4973b20ff434090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NON_CANONICAL_FIELD"
+    },
+    "tags": ["g2", "invalid-field", "aliasing"]
+  },
+  {
+    "id": "g2-yc1-aliased-plus-p-invalid",
+    "description": "BN254 G2 generator with y.c1 replaced by y.c1 + p; MUST fail with ERR_NON_CANONICAL_FIELD without modular reduction. Source: ark-bn254 0.5.0 G2Affine::generator() + Fq::MODULUS.",
+    "operation": "decode_g2",
+    "input_hex": "198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c21800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed396ad8433991909fa4eedf63ea8d8bf353cc9bc4d925598091cd66f3a99f94a212c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NON_CANONICAL_FIELD"
+    },
+    "tags": ["g2", "invalid-field", "aliasing"]
+  },
+  {
+    "id": "g2-yc0-aliased-plus-p-invalid",
+    "description": "BN254 G2 generator with y.c0 replaced by y.c0 + p; MUST fail with ERR_NON_CANONICAL_FIELD without modular reduction. Source: ark-bn254 0.5.0 G2Affine::generator() + Fq::MODULUS.",
+    "operation": "decode_g2",
+    "input_hex": "198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c21800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b432cad18bcbe0e1502fbb7370f4c98ed7b5351fa74b59e08890758183f777af1",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NON_CANONICAL_FIELD"
+    },
+    "tags": ["g2", "invalid-field", "aliasing"]
+  }
+]

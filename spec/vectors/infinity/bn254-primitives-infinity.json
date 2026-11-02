@@ -1,0 +1,79 @@
+[
+  {
+    "id": "g1-infinity-zero-bytes-valid",
+    "description": "BN254 G1 point at infinity encoded as 64 zero bytes. Source: ACF Spec Section 3.2 and Phase 1 Experiment 3.",
+    "operation": "decode_g1",
+    "input_hex": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "expected": {
+      "ok": true,
+      "output_hex": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "tags": ["g1", "infinity", "valid"]
+  },
+  {
+    "id": "g2-infinity-zero-bytes-valid",
+    "description": "BN254 G2 point at infinity encoded as 128 zero bytes. Source: ACF Spec Section 3.3 and Phase 1 Experiment 3.",
+    "operation": "decode_g2",
+    "input_hex": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "expected": {
+      "ok": true,
+      "output_hex": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "tags": ["g2", "infinity", "valid"]
+  },
+  {
+    "id": "g1-arkworks-infinity-flag-0x40-invalid",
+    "description": "64-byte buffer with arkworks infinity flag bit 0x40 set on byte 0; rejected with ERR_NON_CANONICAL_FIELD because x >= p (and rejected by Soroban host flag check). Source: Phase 1 Experiment 2 and Experiment 3.",
+    "operation": "decode_g1",
+    "input_hex": "40000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NON_CANONICAL_FIELD"
+    },
+    "tags": ["g1", "infinity", "flags"]
+  },
+  {
+    "id": "g2-arkworks-infinity-flag-0x40-invalid",
+    "description": "128-byte buffer with arkworks infinity flag bit 0x40 set on byte 0; rejected with ERR_NON_CANONICAL_FIELD because x.c1 >= p (and rejected by Soroban host flag check). Source: Phase 1 Experiment 2 and Experiment 3.",
+    "operation": "decode_g2",
+    "input_hex": "4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NON_CANONICAL_FIELD"
+    },
+    "tags": ["g2", "infinity", "flags"]
+  },
+  {
+    "id": "g1-half-zero-x-only-invalid",
+    "description": "Point (0, 2) has zero x but non-zero y, so it is not infinity and fails y^2 = x^3 + 3 (4 != 3). Source: ACF Spec Section 3.2.",
+    "operation": "decode_g1",
+    "input_hex": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NOT_ON_CURVE"
+    },
+    "tags": ["g1", "infinity", "invalid-curve"]
+  },
+  {
+    "id": "g2-half-zero-x-only-invalid",
+    "description": "G2 point with zero x (0 + 0*u) and G2 generator y is not infinity and fails twist curve equation y^2 = x^3 + 3/(9 + u). Source: ACF Spec Section 3.3 and ark-bn254 0.5.0.",
+    "operation": "decode_g2",
+    "input_hex": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NOT_ON_CURVE"
+    },
+    "tags": ["g2", "infinity", "invalid-curve"]
+  },
+  {
+    "id": "g2-half-zero-y-only-invalid",
+    "description": "G2 point with G2 generator x and zero y (0 + 0*u) is not infinity and fails twist curve equation y^2 = x^3 + 3/(9 + u). Source: ACF Spec Section 3.3 and ark-bn254 0.5.0.",
+    "operation": "decode_g2",
+    "input_hex": "198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c21800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NOT_ON_CURVE"
+    },
+    "tags": ["g2", "infinity", "invalid-curve"]
+  }
+]

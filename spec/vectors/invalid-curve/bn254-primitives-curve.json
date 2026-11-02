@@ -1,0 +1,68 @@
+[
+  {
+    "id": "g1-off-curve-one-three-invalid",
+    "description": "Point (1, 3) has canonical coordinates (< p) but fails y^2 = x^3 + 3 (9 != 4). Source: Phase 1 Experiment 2 negative control and soroban-env-host 29.0.1.",
+    "operation": "decode_g1",
+    "input_hex": "00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000003",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NOT_ON_CURVE"
+    },
+    "tags": ["g1", "invalid-curve"]
+  },
+  {
+    "id": "g1-off-curve-swapped-generator-invalid",
+    "description": "Swapped G1 generator coordinates (2, 1) fail y^2 = x^3 + 3 (1 != 11). Source: ACF Spec Section 3.2 and ark-bn254 0.5.0.",
+    "operation": "decode_g1",
+    "input_hex": "00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NOT_ON_CURVE"
+    },
+    "tags": ["g1", "invalid-curve"]
+  },
+  {
+    "id": "g1-off-curve-zero-one-invalid",
+    "description": "Point (0, 1) fails y^2 = x^3 + 3 (1 != 3). Source: ACF Spec Section 3.2.",
+    "operation": "decode_g1",
+    "input_hex": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NOT_ON_CURVE"
+    },
+    "tags": ["g1", "invalid-curve"]
+  },
+  {
+    "id": "g1-off-curve-nonzero-x-zero-y-invalid",
+    "description": "Point (1, 0) fails y^2 = x^3 + 3 (0 != 4). Source: ACF Spec Section 3.2.",
+    "operation": "decode_g1",
+    "input_hex": "00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NOT_ON_CURVE"
+    },
+    "tags": ["g1", "invalid-curve"]
+  },
+  {
+    "id": "g2-fp2-swapped-c0-c1-order-invalid",
+    "description": "BN254 G2 generator encoded in wrong c0 || c1 Fp2 component order fails twist curve equation y^2 = x^3 + 3/(9 + u) with ERR_NOT_ON_CURVE (preceding subgroup check per Spec Section 9 Rule 3). Source: Phase 1 Experiment 1 negative control on Stellar Testnet RPC.",
+    "operation": "decode_g2",
+    "input_hex": "1800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c212c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NOT_ON_CURVE"
+    },
+    "tags": ["g2", "invalid-curve", "fp2-order", "precedence"]
+  },
+  {
+    "id": "g2-off-curve-perturbed-yc0-invalid",
+    "description": "BN254 G2 generator with y.c0 incremented by 1 fails twist curve equation with ERR_NOT_ON_CURVE. Source: ark-bn254 0.5.0 G2Affine::generator().",
+    "operation": "decode_g2",
+    "input_hex": "198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c21800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7dab",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NOT_ON_CURVE"
+    },
+    "tags": ["g2", "invalid-curve"]
+  }
+]

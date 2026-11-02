@@ -1,0 +1,35 @@
+[
+  {
+    "id": "g2-twist-x-u-outside-subgroup-invalid",
+    "description": "Point with x = 0 + 1*u on the BN254 twist curve y^2 = x^3 + 3/(9 + u) that lies outside the prime-order-r G2 subgroup. Source: ark-bn254 0.5.0 get_point_from_x_unchecked(u, true) and Phase 1 Experiment 2 Stellar Testnet RPC probe.",
+    "operation": "decode_g2",
+    "input_hex": "0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000028a7a81c6bf2a75dc9f0125bb581747e9e6b33fc3b2710a2309cef97a3163c6523712136978ed49faf2120ca4f7f71cfd4e7b46ffa0ea89edbc94ddc59238e9f",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NOT_IN_SUBGROUP"
+    },
+    "tags": ["g2", "invalid-subgroup", "testnet"]
+  },
+  {
+    "id": "g2-twist-mixed-generator-plus-cofactor-invalid",
+    "description": "Sum of G2 generator and twist point (x = u) on y^2 = x^3 + 3/(9 + u), having both non-zero order-r and non-zero cofactor components; MUST fail with ERR_NOT_IN_SUBGROUP. Source: ark-bn254 0.5.0.",
+    "operation": "decode_g2",
+    "input_hex": "0e662c0a736f9a48878067c65673b8938228184160d380a36fba107e443619172cccc7bca9332a86aca051283580b6d9c024d1ddba1e9f56935f5ee8b6da54e4115eb8bf543ac670bf6190c7cb642d4021f06e9065a4d5caa27874c4fc961d762cfb642b86c811757b166e61b9680c10c539b7567b16bb69745e42c47f8cdd06",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NOT_IN_SUBGROUP"
+    },
+    "tags": ["g2", "invalid-subgroup"]
+  },
+  {
+    "id": "g2-twist-pure-cofactor-invalid",
+    "description": "Pure cofactor-subgroup twist point [r] * P_u on y^2 = x^3 + 3/(9 + u), having trivial order-r component and non-trivial cofactor component; MUST fail with ERR_NOT_IN_SUBGROUP. Source: ark-bn254 0.5.0.",
+    "operation": "decode_g2",
+    "input_hex": "0474dc3844fa184691e543c84136ad7452557abebd446907dd90ea3b052550622a71d13bf1f994b80ab16ec77f2a50e21a25c953bb3e64ae13372f25480d84392a263e18a43705d9e05eea39d8bd5e2859cb546b4b59a730292fdc4642a65db42e8b7b47c43935fef1af525dce6f165266ed40816b441dff37dca2c10fb9aef8",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NOT_IN_SUBGROUP"
+    },
+    "tags": ["g2", "invalid-subgroup", "cofactor"]
+  }
+]
