@@ -18,8 +18,8 @@ build-wasm:
 	cargo build -p astrolabe-core --target wasm32v1-none --release
 
 vectors-check:
-	@echo "not implemented yet"
-	@exit 1
+	cargo test -p astrolabe-core --test vectors
+	pnpm -r --filter astrolabe-ts test -- test/vectors.test.ts
 
 differential:
 	@echo "not implemented yet"
