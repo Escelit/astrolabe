@@ -278,6 +278,40 @@ impl G2 {
     /// Point at infinity, encoded as 128 zero bytes (ACF Specification Section 3.3).
     pub const INFINITY: Self = Self { coords: None };
 
+    /// Canonical BN254 G2 generator point (ACF Spec Section 3.3 and Section 12).
+    pub const GENERATOR: Self = Self {
+        coords: Some((
+            Fp2 {
+                c0: Fp::from_limbs_unchecked([
+                    0x46de_bd5c_d992_f6ed,
+                    0x6743_22d4_f75e_dadd,
+                    0x426a_0066_5e5c_4479,
+                    0x1800_deef_121f_1e76,
+                ]),
+                c1: Fp::from_limbs_unchecked([
+                    0x97e4_85b7_aef3_12c2,
+                    0xf1aa_4933_35a9_e712,
+                    0x7260_bfb7_31fb_5d25,
+                    0x198e_9393_920d_483a,
+                ]),
+            },
+            Fp2 {
+                c0: Fp::from_limbs_unchecked([
+                    0x4ce6_cc01_66fa_7daa,
+                    0xe3d1_e769_0c43_d37b,
+                    0x4aab_7180_8dcb_408f,
+                    0x12c8_5ea5_db8c_6deb,
+                ]),
+                c1: Fp::from_limbs_unchecked([
+                    0x55ac_dadc_d122_975b,
+                    0xbc4b_3133_70b3_8ef3,
+                    0xec9e_99ad_690c_3395,
+                    0x0906_89d0_585f_f075,
+                ]),
+            },
+        )),
+    };
+
     /// Constructs a validated [`G2`] point from canonical [`Fp2`] coordinates `(x, y)`
     /// (ACF Specification Section 3.3 and Section 9 Rules 3–4).
     ///

@@ -17,16 +17,30 @@
     )
 )]
 
+extern crate alloc;
+
+mod canonical_json;
 mod curve;
+mod envelope;
 mod field;
+mod groth16;
 mod uint256;
 
 use core::fmt;
 
+pub use canonical_json::{parse_canonical_json, to_canonical_json};
 pub use curve::{decode_g1, decode_g2, encode_g1, encode_g2, G1, G1_BYTE_LEN, G2, G2_BYTE_LEN};
+pub use envelope::{
+    decode_envelope, encode_envelope, ArtifactKind, CurveId, Envelope, EnvelopePayload,
+    ProofSystemId, ENVELOPE_HEADER_BYTE_LEN, ENVELOPE_MAGIC, ENVELOPE_SPEC_VER_0_1,
+};
 pub use field::{
     decode_fp, decode_fr, encode_fp, encode_fr, Fp, Fp2, Fp2ComponentOrder, Fr, BN254_P_BE,
     BN254_R_BE, FP2_BYTE_LEN, FP2_COMPONENT_ORDER, FP_BYTE_LEN, FR_BYTE_LEN,
+};
+pub use groth16::{
+    decode_proof, decode_public_inputs, decode_vk, encode_proof, encode_public_inputs, encode_vk,
+    Proof, PublicInputs, VerificationKey, PROOF_BYTE_LEN, VK_HEADER_BYTE_LEN,
 };
 
 /// Canonical error codes defined by ACF Specification Section 11.
@@ -155,5 +169,59 @@ mod tests {
             doubled.y.mul(z2_sq).mul(added_self.z),
             added_self.y.mul(z1_sq).mul(doubled.z)
         );
+    }
+
+    #[test]
+    fn groth16_objects_and_envelope_round_trip() {
+        let proof = Proof {
+            a: G1::GENERATOR,
+            b: G2::GENERATOR,
+            c: G1::GENERATOR,
+        };
+        let proof_enc = proof.encode();
+        let proof_dec = Proof::decode(&proof_enc).unwrap();
+        assert_eq!(proof, proof_dec);
+
+        let vk = VerificationKey {
+            alpha_g1: G1::GENERATOR,
+            beta_g2: G2::GENERATOR,
+            gamma_g2: G2::GENERATOR,
+            delta_g2: G2::GENERATOR,
+            ic: alloc::vec![G1::GENERATOR, G1::GENERATOR],
+        };
+        assert_eq!(vk.n_ic(), 2);
+        assert_eq!(vk.n_public(), 1);
+        let vk_enc = vk.encode();
+        let vk_dec = VerificationKey::decode(&vk_enc).unwrap();
+        assert_eq!(vk, vk_dec);
+
+        let pi = PublicInputs {
+            inputs: alloc::vec![Fr::ONE],
+        };
+        assert_eq!(pi.len(), 1);
+        assert!(!pi.is_empty());
+        let pi_enc = pi.encode();
+        let pi_dec = PublicInputs::decode(&pi_enc).unwrap();
+        assert_eq!(pi, pi_dec);
+
+        assert!(vk.validate_public_inputs(&pi).is_ok());
+        assert!(pi.validate_with_vk(&vk).is_ok());
+
+        let wrong_pi = PublicInputs {
+            inputs: alloc::vec![Fr::ONE, Fr::ONE],
+        };
+        assert_eq!(
+            vk.validate_public_inputs(&wrong_pi),
+            Err(AcfError::PublicInputCount)
+        );
+
+        let env = Envelope::new(EnvelopePayload::Proof(proof));
+        let env_enc = env.encode();
+        let env_dec = Envelope::decode(&env_enc).unwrap();
+        assert_eq!(env, env_dec);
+
+        let json_str = to_canonical_json(&env);
+        let parsed_env = parse_canonical_json(&json_str).unwrap();
+        assert_eq!(env, parsed_env);
     }
 }

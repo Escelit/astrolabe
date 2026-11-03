@@ -1,6 +1,9 @@
 //! Conformance test vector runner for `astrolabe-core` (ACF Spec Section 12).
 
-use astrolabe_core::{decode_fp, decode_fr, decode_g1, decode_g2, AcfError};
+use astrolabe_core::{
+    decode_envelope, decode_fp, decode_fr, decode_g1, decode_g2, decode_proof,
+    decode_public_inputs, decode_vk, AcfError, G1_BYTE_LEN, VK_HEADER_BYTE_LEN,
+};
 use serde::Deserialize;
 use std::collections::BTreeSet;
 use std::fs;
@@ -75,8 +78,49 @@ fn run_primitive_op(operation: &str, input: &[u8]) -> Option<Result<Vec<u8>, Acf
         "decode_fr" => Some(decode_fr(input).map(|fr| fr.encode().to_vec())),
         "decode_g1" => Some(decode_g1(input).map(|g1| g1.encode().to_vec())),
         "decode_g2" => Some(decode_g2(input).map(|g2| g2.encode().to_vec())),
-        // Phase 3 Groth16 object operations seeded in Phase 1 fixtures:
-        "decode_proof" | "decode_vk" | "decode_public_inputs" => None,
+        "decode_proof" => Some(decode_proof(input).map(|proof| proof.encode().to_vec())),
+        "decode_vk" => Some(decode_vk(input).map(|vk| vk.encode())),
+        "decode_public_inputs" => Some(decode_public_inputs(input).map(|pi| pi.encode())),
+        "decode_envelope" => Some(decode_envelope(input).map(|env| env.encode())),
+        "verify_public_inputs_count" => {
+            if input.len() < VK_HEADER_BYTE_LEN {
+                return Some(Err(AcfError::BadLength));
+            }
+            let n_ic_bytes: [u8; 4] = match input.get(448..452) {
+                Some(slice) => match slice.try_into() {
+                    Ok(arr) => arr,
+                    Err(_) => return Some(Err(AcfError::BadLength)),
+                },
+                None => return Some(Err(AcfError::BadLength)),
+            };
+            let n_ic = u32::from_be_bytes(n_ic_bytes) as usize;
+            let vk_len = VK_HEADER_BYTE_LEN.saturating_add(n_ic.saturating_mul(G1_BYTE_LEN));
+            if input.len() < vk_len {
+                return Some(Err(AcfError::BadLength));
+            }
+            let vk_bytes = match input.get(..vk_len) {
+                Some(s) => s,
+                None => return Some(Err(AcfError::BadLength)),
+            };
+            let pi_bytes = match input.get(vk_len..) {
+                Some(s) => s,
+                None => return Some(Err(AcfError::BadLength)),
+            };
+            let vk = match decode_vk(vk_bytes) {
+                Ok(v) => v,
+                Err(e) => return Some(Err(e)),
+            };
+            let pi = match decode_public_inputs(pi_bytes) {
+                Ok(p) => p,
+                Err(e) => return Some(Err(e)),
+            };
+            if let Err(e) = vk.validate_public_inputs(&pi) {
+                return Some(Err(e));
+            }
+            let mut out = vk.encode();
+            out.extend_from_slice(&pi.encode());
+            Some(Ok(out))
+        }
         other => panic!("unknown vector operation '{other}'"),
     }
 }
