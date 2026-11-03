@@ -1,0 +1,50 @@
+[
+  {
+    "id": "groth16-proof-point-a-infinity-invalid",
+    "description": "Groth16 proof with degenerate point A at infinity (64 zero bytes); rejected with ERR_INVALID_PROOF. Source: ACF Spec Section 8 Step 3 and Section 9 Rule 6.",
+    "operation": "decode_proof",
+    "input_hex": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100792e3175ff2f52bb403fb1b33eb62db1e30b06dea369186faaaaae25f6b7427108db79d78a66e9de40d156b0afd421265f7c50e53aa068a896698fb586ac10fe25410b2b341224247825bd25acce576201d3d828781ffe6ca4a5c81b3e35609d861e52f7de282f16a79f0b0d895a19e063af5c3a265ecbcf9f65c1598acd206e4d97e80404e4de3d846689cb020de2e02d2594bd93c19a7ccea4241f336092556ecd9998b1858547bed640f06afdb213a0af2ccff62421be219c5546162e8",
+    "expected": {
+      "ok": false,
+      "error": "ERR_INVALID_PROOF"
+    },
+    "tags": [
+      "groth16",
+      "proof",
+      "infinity",
+      "invalid"
+    ]
+  },
+  {
+    "id": "groth16-proof-point-b-infinity-invalid",
+    "description": "Groth16 proof with degenerate point B at infinity (128 zero bytes); rejected with ERR_INVALID_PROOF. Source: ACF Spec Section 8 Step 3 and Section 9 Rule 6.",
+    "operation": "decode_proof",
+    "input_hex": "0d7878bb471f16e0e8366778a28829db4d5ff09baf9517695cd0d23cd2c1b2e80f0e8336dd5bd193b1918a13dce96010b06db87f9d99af62e28eb1d134124d58000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006e4d97e80404e4de3d846689cb020de2e02d2594bd93c19a7ccea4241f336092556ecd9998b1858547bed640f06afdb213a0af2ccff62421be219c5546162e8",
+    "expected": {
+      "ok": false,
+      "error": "ERR_INVALID_PROOF"
+    },
+    "tags": [
+      "groth16",
+      "proof",
+      "infinity",
+      "invalid"
+    ]
+  },
+  {
+    "id": "groth16-proof-point-c-infinity-invalid",
+    "description": "Groth16 proof with degenerate point C at infinity (64 zero bytes); rejected with ERR_INVALID_PROOF. Source: ACF Spec Section 8 Step 3 and Section 9 Rule 6.",
+    "operation": "decode_proof",
+    "input_hex": "0d7878bb471f16e0e8366778a28829db4d5ff09baf9517695cd0d23cd2c1b2e80f0e8336dd5bd193b1918a13dce96010b06db87f9d99af62e28eb1d134124d58100792e3175ff2f52bb403fb1b33eb62db1e30b06dea369186faaaaae25f6b7427108db79d78a66e9de40d156b0afd421265f7c50e53aa068a896698fb586ac10fe25410b2b341224247825bd25acce576201d3d828781ffe6ca4a5c81b3e35609d861e52f7de282f16a79f0b0d895a19e063af5c3a265ecbcf9f65c1598acd200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "expected": {
+      "ok": false,
+      "error": "ERR_INVALID_PROOF"
+    },
+    "tags": [
+      "groth16",
+      "proof",
+      "infinity",
+      "invalid"
+    ]
+  }
+]

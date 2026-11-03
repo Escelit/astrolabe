@@ -1,0 +1,34 @@
+[
+  {
+    "id": "groth16-proof-point-b-not-in-subgroup-invalid",
+    "description": "Groth16 proof with point B on twist curve but outside order-r subgroup; rejected with ERR_NOT_IN_SUBGROUP. Source: ACF Spec Section 3.3, Section 9 Rule 4, and Phase 1 Experiment 2.",
+    "operation": "decode_proof",
+    "input_hex": "0d7878bb471f16e0e8366778a28829db4d5ff09baf9517695cd0d23cd2c1b2e80f0e8336dd5bd193b1918a13dce96010b06db87f9d99af62e28eb1d134124d580000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000028a7a81c6bf2a75dc9f0125bb581747e9e6b33fc3b2710a2309cef97a3163c6523712136978ed49faf2120ca4f7f71cfd4e7b46ffa0ea89edbc94ddc59238e9f06e4d97e80404e4de3d846689cb020de2e02d2594bd93c19a7ccea4241f336092556ecd9998b1858547bed640f06afdb213a0af2ccff62421be219c5546162e8",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NOT_IN_SUBGROUP"
+    },
+    "tags": [
+      "groth16",
+      "proof",
+      "subgroup",
+      "invalid"
+    ]
+  },
+  {
+    "id": "groth16-vk-point-beta-not-in-subgroup-invalid",
+    "description": "Groth16 verification key with point beta on twist curve but outside order-r subgroup; rejected with ERR_NOT_IN_SUBGROUP. Source: ACF Spec Section 3.3, Section 9 Rule 4, and Phase 1 Experiment 2.",
+    "operation": "decode_vk",
+    "input_hex": "2c3eca3b96938a231158ff0690bd4af0a7b020cc9bf9ec649bfd1a6f9fedc2841e81947887a20eff0366a4cc56891097b8f2c07f27dd57fd47df7f24aab2e1610000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000028a7a81c6bf2a75dc9f0125bb581747e9e6b33fc3b2710a2309cef97a3163c6523712136978ed49faf2120ca4f7f71cfd4e7b46ffa0ea89edbc94ddc59238e9f198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c21800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa2f31a9ffbec70638647f26bc7a49c866fcbf7ac20aa7408e695004da9ef5e25e165ff901385851b84ecf6c366fe61e641b7dab33cb9926e8288d65d36e1689621238f3a5cc6a9c9fe7e18f02041403c1124164ef5b00b7e7ff635a498d09c2420d71091d690ae6268f2db7e7cc97e9e67415ba92e0e90ea2f9172da571523152000000031f9ca84019247d9ea29cc5d1d3cee12b76bbc2385586cdbad63a6cd65addd2e61af0ff10ff1e6b6e4be920f6328ca0f437d45ea4cf9223bb2ef2e38ff1fc6c3111584ff9c88f8138175bd526cd78145da96cba2021e87f8af4c74a24dd82d1a31296a9041b061089d28d65f1a7807316a6927151dd3c359f4f2a8ec71f0a5a602f0776c05fc028592d2a05f66c4798e39eaf595a5a8aebc07bb583d03affd7da09790bda24e938bba6be23e1a7cfdd6bd635e1ed49c5204da7c25ad32354ad19",
+    "expected": {
+      "ok": false,
+      "error": "ERR_NOT_IN_SUBGROUP"
+    },
+    "tags": [
+      "groth16",
+      "vk",
+      "subgroup",
+      "invalid"
+    ]
+  }
+]
