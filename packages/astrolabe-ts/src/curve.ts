@@ -56,6 +56,16 @@ export class G1 {
  */
 export class G2 {
   public static readonly INFINITY = new G2(null);
+  public static readonly GENERATOR = new G2({
+    x: {
+      c0: 0x1800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6edn,
+      c1: 0x198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c2n,
+    },
+    y: {
+      c0: 0x12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daan,
+      c1: 0x090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975bn,
+    },
+  });
 
   public readonly coordinates: { readonly x: Fp2; readonly y: Fp2 } | null;
 

@@ -5,15 +5,26 @@ import { describe, expect, it } from "vitest";
 import {
   AcfError,
   bytesToHex,
+  concatBytes,
+  decodeEnvelope,
   decodeFp,
   decodeFr,
   decodeG1,
   decodeG2,
+  decodeProof,
+  decodePublicInputs,
+  decodeVerificationKey,
+  encodeEnvelope,
   encodeFp,
   encodeFr,
   encodeG1,
   encodeG2,
+  encodeProof,
+  encodePublicInputs,
+  encodeVerificationKey,
+  G1_BYTE_LEN,
   hexToBytes,
+  VK_HEADER_BYTE_LEN,
 } from "../src/index.js";
 
 interface Expected {
@@ -61,9 +72,34 @@ function runPrimitiveOp(
     case "decode_g2":
       return encodeG2(decodeG2(input));
     case "decode_proof":
+      return encodeProof(decodeProof(input));
     case "decode_vk":
+      return encodeVerificationKey(decodeVerificationKey(input));
     case "decode_public_inputs":
-      return null;
+      return encodePublicInputs(decodePublicInputs(input));
+    case "decode_envelope":
+      return encodeEnvelope(decodeEnvelope(input));
+    case "verify_public_inputs_count": {
+      if (input.length < VK_HEADER_BYTE_LEN) {
+        throw new AcfError("ERR_BAD_LENGTH");
+      }
+      const view = new DataView(
+        input.buffer,
+        input.byteOffset,
+        input.byteLength,
+      );
+      const nIc = view.getUint32(448, false);
+      const vkLen = VK_HEADER_BYTE_LEN + nIc * G1_BYTE_LEN;
+      if (input.length < vkLen) {
+        throw new AcfError("ERR_BAD_LENGTH");
+      }
+      const vkBytes = input.subarray(0, vkLen);
+      const piBytes = input.subarray(vkLen);
+      const vk = decodeVerificationKey(vkBytes);
+      const pi = decodePublicInputs(piBytes);
+      vk.validatePublicInputs(pi);
+      return concatBytes(encodeVerificationKey(vk), encodePublicInputs(pi));
+    }
     default:
       throw new Error(`unknown vector operation: ${operation}`);
   }

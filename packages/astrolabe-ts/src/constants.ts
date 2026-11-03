@@ -42,6 +42,31 @@ export const G1_BYTE_LEN = 64;
 export const G2_BYTE_LEN = 128;
 
 /**
+ * Exact byte length of a Groth16 proof payload `A ‖ B ‖ C` (ACF Spec Section 4.1).
+ */
+export const PROOF_BYTE_LEN = 256;
+
+/**
+ * Exact byte length of the fixed header in a Groth16 verification key payload (ACF Spec Section 4.2).
+ */
+export const VK_HEADER_BYTE_LEN = 452;
+
+/**
+ * Fixed length of an ACF envelope header in bytes (ACF Spec Section 5).
+ */
+export const ENVELOPE_HEADER_BYTE_LEN = 12;
+
+/**
+ * 4-byte ASCII magic identifier `ASTR` (ACF Spec Section 5).
+ */
+export const ENVELOPE_MAGIC = new Uint8Array([0x41, 0x53, 0x54, 0x52]);
+
+/**
+ * Format spec version byte for ACF 0.x (ACF Spec Section 5).
+ */
+export const ENVELOPE_SPEC_VER_0_1 = 0x01;
+
+/**
  * Wire component ordering for `Fp2` coordinates inside `G2` points (ACF Spec Section 3.3).
  */
 export enum Fp2ComponentOrder {

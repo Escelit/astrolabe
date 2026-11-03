@@ -10,3 +10,6 @@ export * from "./errors.js";
 export * from "./bytes.js";
 export * from "./field.js";
 export * from "./curve.js";
+export * from "./groth16.js";
+export * from "./envelope.js";
+export * from "./canonical-json.js";
