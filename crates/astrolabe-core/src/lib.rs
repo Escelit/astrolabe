@@ -24,6 +24,7 @@ mod curve;
 mod envelope;
 mod field;
 mod groth16;
+pub mod snarkjs;
 mod uint256;
 
 use core::fmt;
@@ -41,6 +42,11 @@ pub use field::{
 pub use groth16::{
     decode_proof, decode_public_inputs, decode_vk, encode_proof, encode_public_inputs, encode_vk,
     Proof, PublicInputs, VerificationKey, PROOF_BYTE_LEN, VK_HEADER_BYTE_LEN,
+};
+pub use snarkjs::{
+    parse_dec_fp, parse_dec_fr, parse_snarkjs_proof, parse_snarkjs_proof_envelope,
+    parse_snarkjs_public_inputs, parse_snarkjs_public_inputs_envelope, parse_snarkjs_vk,
+    parse_snarkjs_vk_envelope,
 };
 
 /// Canonical error codes defined by ACF Specification Section 11.
