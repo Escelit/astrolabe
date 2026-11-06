@@ -22,5 +22,6 @@ vectors-check:
 	pnpm -r --filter astrolabe-ts test -- test/vectors.test.ts
 
 differential:
-	@echo "not implemented yet"
-	@exit 1
+	cargo test -p astrolabe-core --test differential
+	pnpm -r --filter astrolabe-ts test -- test/differential.test.ts
+	node scripts/differential_crosscheck.mjs
