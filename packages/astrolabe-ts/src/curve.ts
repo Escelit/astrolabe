@@ -47,6 +47,18 @@ export class G1 {
   public isInfinity(): boolean {
     return this.coordinates === null;
   }
+
+  public static fromCoordinates(x: Fp, y: Fp): G1 {
+    if (x === 0n && y === 0n) {
+      return G1.INFINITY;
+    }
+    const lhs = squareFp(y);
+    const rhs = addFp(mulFp(squareFp(x), x), G1_COEFF_B);
+    if (lhs !== rhs) {
+      throw new AcfError("ERR_NOT_ON_CURVE");
+    }
+    return new G1({ x, y });
+  }
 }
 
 /**
@@ -77,6 +89,21 @@ export class G2 {
 
   public isInfinity(): boolean {
     return this.coordinates === null;
+  }
+
+  public static fromCoordinates(x: Fp2, y: Fp2): G2 {
+    if (isZeroFp2(x) && isZeroFp2(y)) {
+      return G2.INFINITY;
+    }
+    const lhs = squareFp2(y);
+    const rhs = addFp2(mulFp2(squareFp2(x), x), G2_TWIST_COEFF_B);
+    if (!equalsFp2(lhs, rhs)) {
+      throw new AcfError("ERR_NOT_ON_CURVE");
+    }
+    if (!isInG2Subgroup(x, y)) {
+      throw new AcfError("ERR_NOT_IN_SUBGROUP");
+    }
+    return new G2({ x, y });
   }
 }
 
@@ -174,18 +201,7 @@ export function decodeG1(bytes: Uint8Array): G1 {
   }
   const x = decodeFp(bytes.subarray(0, 32));
   const y = decodeFp(bytes.subarray(32, 64));
-
-  if (x === 0n && y === 0n) {
-    return G1.INFINITY;
-  }
-
-  const lhs = squareFp(y);
-  const rhs = addFp(mulFp(squareFp(x), x), G1_COEFF_B);
-  if (lhs !== rhs) {
-    throw new AcfError("ERR_NOT_ON_CURVE");
-  }
-
-  return new G1({ x, y });
+  return G1.fromCoordinates(x, y);
 }
 
 /**
@@ -216,24 +232,7 @@ export function decodeG2(bytes: Uint8Array): G2 {
   }
   const x = decodeFp2(bytes.subarray(0, 64));
   const y = decodeFp2(bytes.subarray(64, 128));
-
-  if (isZeroFp2(x) && isZeroFp2(y)) {
-    return G2.INFINITY;
-  }
-
-  // Spec Section 9 Rule 3: on-curve check precedes subgroup check.
-  const lhs = squareFp2(y);
-  const rhs = addFp2(mulFp2(squareFp2(x), x), G2_TWIST_COEFF_B);
-  if (!equalsFp2(lhs, rhs)) {
-    throw new AcfError("ERR_NOT_ON_CURVE");
-  }
-
-  // Spec Section 9 Rule 4: subgroup check.
-  if (!isInG2Subgroup(x, y)) {
-    throw new AcfError("ERR_NOT_IN_SUBGROUP");
-  }
-
-  return new G2({ x, y });
+  return G2.fromCoordinates(x, y);
 }
 
 /**

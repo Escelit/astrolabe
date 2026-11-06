@@ -13,3 +13,4 @@ export * from "./curve.js";
 export * from "./groth16.js";
 export * from "./envelope.js";
 export * from "./canonical-json.js";
+export * from "./snarkjs.js";
