@@ -6,4 +6,13 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [dependencies]
+soroban-sdk = "=29.0.1"
+
+[dev-dependencies]
+astrolabe-core = { path = "../astrolabe-core" }
+soroban-sdk = { version = "=29.0.1", features = ["testutils"] }
+soroban-env-host = "=29.0.1"
