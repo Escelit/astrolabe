@@ -6,4 +6,16 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
+[[bin]]
+name = "astrolabe"
+path = "src/main.rs"
+
 [dependencies]
+astrolabe-core = { path = "../astrolabe-core" }
+astrolabe-verifier = { path = "../astrolabe-verifier" }
+clap = { version = "4.6", features = ["derive"] }
+hex = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+soroban-env-host = "=29.0.1"
+soroban-sdk = { version = "=29.0.1", features = ["testutils"] }
