@@ -196,5 +196,5 @@ astrolabe doctor [OPTIONS]
 
 ### Exit Codes
 
-- `0`: All critical Soroban BN254 requirements (`rustc`, `wasm32v1-none` target, `stellar` CLI) are satisfied.
+- `0`: All critical Rust/WASM requirements (`rustc`, `cargo`, `wasm32v1-none` target) are satisfied.
 - `1`: A critical requirement is missing or an invalid argument/artifact was supplied.

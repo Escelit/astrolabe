@@ -87,7 +87,7 @@ pub fn run_doctor(args: DoctorArgs) -> Result<(), CliError> {
             }
             if check.name == "rustc"
                 || check.name == "wasm32v1-none target"
-                || check.name == "stellar"
+                || check.name == "cargo"
             {
                 all_critical_passed = false;
             }

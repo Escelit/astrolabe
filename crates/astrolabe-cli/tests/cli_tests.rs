@@ -243,13 +243,17 @@ fn test_cli_doctor() {
         .output()
         .expect("Failed to execute doctor");
 
-    assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "doctor --offline failed:\nstdout:\n{stdout}\nstderr:\n{stderr}"
+    );
     assert!(stdout.contains("Astrolabe Environment Diagnostics"));
     assert!(stdout.contains("[✓] rustc"));
     assert!(stdout.contains("[✓] wasm32v1-none target"));
     assert!(stdout.contains("[✓] cargo"));
-    assert!(stdout.contains("[✓] stellar"));
+    assert!(stdout.contains("stellar:"));
     assert!(stdout.contains("SATISFIED"));
 }
 
