@@ -6,10 +6,12 @@
 #![no_std]
 #![deny(unsafe_code)]
 
+#[cfg(any(not(target_family = "wasm"), feature = "stored-contract"))]
+use soroban_sdk::{contract, contractimpl, symbol_short, Address, Symbol};
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype,
+    contracterror, contracttype,
     crypto::bn254::{Bn254Fr, Bn254G1Affine, Bn254G2Affine},
-    symbol_short, vec, Address, Bytes, BytesN, Env, Symbol, Vec,
+    vec, Bytes, BytesN, Env, Vec,
 };
 
 /// BN254 base field modulus `p` in big-endian bytes (ACF Spec Section 2).
@@ -97,7 +99,9 @@ pub struct Groth16Vk {
     pub ic: Vec<BytesN<64>>,
 }
 
+#[cfg(any(not(target_family = "wasm"), feature = "stored-contract"))]
 const STORAGE_KEY_ADMIN: Symbol = symbol_short!("admin");
+#[cfg(any(not(target_family = "wasm"), feature = "stored-contract"))]
 const STORAGE_KEY_VK: Symbol = symbol_short!("vk");
 
 fn is_all_zero(buf: &[u8]) -> bool {
@@ -292,9 +296,11 @@ pub fn parse_proof(env: &Env, proof_bytes: &BytesN<256>) -> Result<Groth16Proof,
 }
 
 /// Deployable Soroban contract with stored verification key in instance storage.
+#[cfg(any(not(target_family = "wasm"), feature = "stored-contract"))]
 #[contract]
 pub struct StoredVkVerifierContract;
 
+#[cfg(any(not(target_family = "wasm"), feature = "stored-contract"))]
 #[contractimpl]
 impl StoredVkVerifierContract {
     /// Initializes the contract with an admin address and an initial verification key.

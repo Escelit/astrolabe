@@ -4,6 +4,7 @@ members = [
     "crates/astrolabe-core",
     "crates/astrolabe-verifier",
     "crates/astrolabe-cli",
+    "examples/circom-multiplier/contract",
 ]
 
 [workspace.package]

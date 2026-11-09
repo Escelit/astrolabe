@@ -252,3 +252,47 @@ fn test_cli_doctor() {
     assert!(stdout.contains("[✓] stellar"));
     assert!(stdout.contains("SATISFIED"));
 }
+
+#[test]
+fn test_example_circom_multiplier_artifacts() {
+    let example_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../examples/circom-multiplier/artifacts");
+    let proof_json = example_dir.join("proof.json");
+    let vk_json = example_dir.join("verification_key.json");
+    let pub_json = example_dir.join("public.json");
+    let proof_hex = example_dir.join("proof.hex");
+    let vk_hex = example_dir.join("vk.hex");
+    let pub_hex = example_dir.join("public.hex");
+
+    // Verify from snarkjs JSON artifacts
+    let out_json = get_cli_bin()
+        .args([
+            "verify",
+            "--proof",
+            proof_json.to_str().unwrap(),
+            "--vk",
+            vk_json.to_str().unwrap(),
+            "--public",
+            pub_json.to_str().unwrap(),
+        ])
+        .output()
+        .expect("Failed to execute verify on example JSON artifacts");
+    assert!(out_json.status.success());
+    assert!(String::from_utf8_lossy(&out_json.stdout).contains("Proof verification SUCCEEDED!"));
+
+    // Verify from exported ACF hex artifacts
+    let out_hex = get_cli_bin()
+        .args([
+            "verify",
+            "--proof",
+            proof_hex.to_str().unwrap(),
+            "--vk",
+            vk_hex.to_str().unwrap(),
+            "--public",
+            pub_hex.to_str().unwrap(),
+        ])
+        .output()
+        .expect("Failed to execute verify on example hex artifacts");
+    assert!(out_hex.status.success());
+    assert!(String::from_utf8_lossy(&out_hex.stdout).contains("Proof verification SUCCEEDED!"));
+}

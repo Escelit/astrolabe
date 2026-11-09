@@ -181,6 +181,13 @@ fn generate_package(
     let src_dir = dir.join("src");
     fs::create_dir_all(&src_dir).map_err(|e| CliError::Io(src_dir.display().to_string(), e))?;
 
+    let verifier_dep = match mode {
+        VerifierMode::Baked => r#"astrolabe-verifier = "0.1.0""#,
+        VerifierMode::Stored => {
+            r#"astrolabe-verifier = { version = "0.1.0", features = ["stored-contract"] }"#
+        }
+    };
+
     let cargo_toml = format!(
         r#"[package]
 name = "{pkg_name}"
@@ -191,7 +198,7 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-astrolabe-verifier = "0.1.0"
+{verifier_dep}
 soroban-sdk = "=29.0.1"
 
 [dev-dependencies]
