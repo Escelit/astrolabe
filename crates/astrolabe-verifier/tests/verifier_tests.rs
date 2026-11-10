@@ -141,4 +141,18 @@ fn test_parse_vk_and_proof() {
     assert_eq!(parsed_proof.a.to_array(), proof_raw[0..64]);
     assert_eq!(parsed_proof.b.to_array(), proof_raw[64..192]);
     assert_eq!(parsed_proof.c.to_array(), proof_raw[192..256]);
+
+    // Zero IC count in verification key MUST be rejected with PublicInputCount
+    let mut zero_ic_vk_raw = vk_raw[0..452].to_vec();
+    zero_ic_vk_raw[448..452].fill(0); // n_ic = 0
+    let zero_ic_vk_bytes = Bytes::from_slice(&env, &zero_ic_vk_raw);
+    assert_eq!(
+        parse_vk(&env, &zero_ic_vk_bytes),
+        Err(VerifierError::PublicInputCount)
+    );
+    let empty_pub = Vec::new(&env);
+    assert_eq!(
+        verify_groth16_bytes(&env, &zero_ic_vk_bytes, &proof_bytes, &empty_pub),
+        Err(VerifierError::PublicInputCount)
+    );
 }

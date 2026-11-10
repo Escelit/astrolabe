@@ -147,6 +147,9 @@ pub fn verify_groth16_bytes(
     let mut n_ic_buf = [0u8; 4];
     vk_bytes.slice(448..452).copy_into_slice(&mut n_ic_buf);
     let n_ic = u32::from_be_bytes(n_ic_buf);
+    if n_ic == 0 {
+        return Err(VerifierError::PublicInputCount);
+    }
     let expected_vk_len = 452u32
         .checked_add(n_ic.checked_mul(64).ok_or(VerifierError::BadLength)?)
         .ok_or(VerifierError::BadLength)?;
@@ -240,6 +243,9 @@ pub fn parse_vk(env: &Env, vk_bytes: &Bytes) -> Result<Groth16Vk, VerifierError>
     let mut n_ic_buf = [0u8; 4];
     vk_bytes.slice(448..452).copy_into_slice(&mut n_ic_buf);
     let n_ic = u32::from_be_bytes(n_ic_buf);
+    if n_ic == 0 {
+        return Err(VerifierError::PublicInputCount);
+    }
     let expected_len = 452u32
         .checked_add(n_ic.checked_mul(64).ok_or(VerifierError::BadLength)?)
         .ok_or(VerifierError::BadLength)?;

@@ -86,10 +86,14 @@ fn parse_u32_ascii(s: &str) -> Result<u32, AcfError> {
     Ok(acc)
 }
 
+/// Maximum recursion depth allowed during JSON parsing to protect against stack exhaustion.
+const MAX_JSON_DEPTH: usize = 64;
+
 struct JsonParser<'a> {
     input: &'a str,
     bytes: &'a [u8],
     cursor: usize,
+    depth: usize,
 }
 
 impl<'a> JsonParser<'a> {
@@ -98,6 +102,7 @@ impl<'a> JsonParser<'a> {
             input,
             bytes: input.as_bytes(),
             cursor: 0,
+            depth: 0,
         }
     }
 
@@ -126,9 +131,13 @@ impl<'a> JsonParser<'a> {
     }
 
     fn parse_value(&mut self) -> Result<JsonValue<'a>, AcfError> {
+        if self.depth >= MAX_JSON_DEPTH {
+            return Err(AcfError::MalformedInput);
+        }
+        self.depth = self.depth.saturating_add(1);
         self.skip_whitespace();
         let b = self.peek_byte().ok_or(AcfError::MalformedInput)?;
-        match b {
+        let res = match b {
             b'{' => self.parse_object(),
             b'[' => self.parse_array(),
             b'"' => self.parse_string(),
@@ -136,7 +145,9 @@ impl<'a> JsonParser<'a> {
             b'n' => self.parse_null(),
             b'-' | b'0'..=b'9' => self.parse_number(),
             _ => Err(AcfError::MalformedInput),
-        }
+        };
+        self.depth = self.depth.saturating_sub(1);
+        res
     }
 
     fn parse_string(&mut self) -> Result<JsonValue<'a>, AcfError> {
