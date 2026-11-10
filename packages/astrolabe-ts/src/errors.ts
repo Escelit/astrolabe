@@ -1,5 +1,5 @@
 /**
- * Canonical error codes defined by ACF Specification Section 11 (`acf/0.1`).
+ * Canonical error codes defined by ACF Specification Section 11 (`acf/1.0`).
  */
 export const ACF_ERROR_CODES = {
   BadLength: "ERR_BAD_LENGTH",

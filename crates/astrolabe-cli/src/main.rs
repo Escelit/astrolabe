@@ -1,4 +1,4 @@
-//! Command-line interface for Astrolabe (`acf/0.1`).
+//! Command-line interface for Astrolabe (`acf/1.0`).
 //!
 //! Provides `export`, `gen-verifier`, `verify`, and `doctor` commands
 //! for moving zero-knowledge proofs onto Soroban contracts.

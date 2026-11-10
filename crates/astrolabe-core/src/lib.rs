@@ -1,4 +1,4 @@
-//! Core types, encodings, and validators for the Astrolabe Canonical Format (`acf/0.1`).
+//! Core types, encodings, and validators for the Astrolabe Canonical Format (`acf/1.0`).
 //!
 //! Implements BN254 field elements ([`Fp`], [`Fr`], [`Fp2`]), affine curve points
 //! ([`G1`], [`G2`]), strict validation rules, and canonical error codes per ACF

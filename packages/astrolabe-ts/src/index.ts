@@ -1,5 +1,5 @@
 /**
- * Astrolabe Canonical Format (ACF) TypeScript SDK (`acf/0.1`).
+ * Astrolabe Canonical Format (ACF) TypeScript SDK (`acf/1.0`).
  *
  * Implements BN254 field elements (`Fp`, `Fr`, `Fp2`), curve points (`G1`, `G2`),
  * strict validation, and canonical error codes (ACF Specification Sections 2, 3, 9, 11).

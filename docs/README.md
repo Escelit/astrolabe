@@ -24,7 +24,7 @@ Welcome to the documentation for **Astrolabe (`acf/1.0`)**, the open-source tool
 
 ## Compatibility Table
 
-Astrolabe (`acf/0.1`) is tested in CI and against live Stellar Testnet RPC with the following tool and protocol versions:
+Astrolabe (`acf/1.0`) is tested in CI and against live Stellar Testnet RPC with the following tool and protocol versions:
 
 | Component | Supported / Tested Version | Notes |
 | --------- | -------------------------- | ----- |

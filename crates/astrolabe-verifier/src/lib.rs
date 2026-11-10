@@ -1,4 +1,4 @@
-//! Soroban contract helpers and Groth16 verifier template for Astrolabe (`acf/0.1`).
+//! Soroban contract helpers and Groth16 verifier template for Astrolabe (`acf/1.0`).
 //!
 //! Implements strict, on-chain Groth16 verification over BN254 host functions
 //! conforming to ACF Specification Sections 7, 8, 9, and 11.

@@ -10,9 +10,9 @@ publish = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-astrolabe-verifier = { version = "0.1.0", path = "../../../crates/astrolabe-verifier" }
+astrolabe-verifier = { version = "1.0.0", path = "../../../crates/astrolabe-verifier" }
 soroban-sdk = "=29.0.1"
 
 [dev-dependencies]
-astrolabe-core = { version = "0.1.0", path = "../../../crates/astrolabe-core" }
+astrolabe-core = { version = "1.0.0", path = "../../../crates/astrolabe-core" }
 soroban-sdk = { version = "=29.0.1", features = ["testutils"] }
