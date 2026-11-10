@@ -189,6 +189,9 @@ export function parseSnarkjsVerificationKey(
   return new VerificationKey(alpha, beta, gamma, delta, ic);
 }
 
+/** Alias for [`parseSnarkjsVerificationKey`]. */
+export const parseSnarkjsVk = parseSnarkjsVerificationKey;
+
 /**
  * Parses and strictly validates a snarkjs `public.json` array into a canonical [`PublicInputs`].
  *

@@ -1,0 +1,72 @@
+[package]
+name = "astrolabe-core-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.astrolabe-core]
+path = "../crates/astrolabe-core"
+
+[[bin]]
+name = "fuzz_decode_g1"
+path = "fuzz_targets/fuzz_decode_g1.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_decode_g2"
+path = "fuzz_targets/fuzz_decode_g2.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_decode_proof"
+path = "fuzz_targets/fuzz_decode_proof.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_decode_vk"
+path = "fuzz_targets/fuzz_decode_vk.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_decode_envelope"
+path = "fuzz_targets/fuzz_decode_envelope.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_snarkjs_proof"
+path = "fuzz_targets/fuzz_snarkjs_proof.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_snarkjs_vk"
+path = "fuzz_targets/fuzz_snarkjs_vk.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_snarkjs_public"
+path = "fuzz_targets/fuzz_snarkjs_public.rs"
+test = false
+doc = false
+bench = false

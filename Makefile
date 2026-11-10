@@ -1,4 +1,4 @@
-.PHONY: fmt fmt-check lint test build-wasm vectors-check differential
+.PHONY: fmt fmt-check lint test build-wasm vectors-check differential fuzz
 
 fmt:
 	cargo fmt --all
@@ -25,3 +25,8 @@ differential:
 	cargo test -p astrolabe-core --test differential
 	pnpm -r --filter astrolabe-ts test -- test/differential.test.ts
 	node scripts/differential_crosscheck.mjs
+
+fuzz:
+	cargo test -p astrolabe-core --test fuzz_regression
+	pnpm -r --filter astrolabe-ts test -- test/fuzz.test.ts
+
