@@ -2,8 +2,8 @@
 
 **The navigation toolkit and canonical format for verifying zero-knowledge proofs on Stellar Soroban.**
 
-> **Status: `v0.1` (`acf/0.1`) — Implemented and verified on Stellar Testnet (Protocol 29). Pre-audit.**  
-> Core libraries, `snarkjs` adapters, Soroban verifier contracts, and CLI are complete and tested against 101 conformance vectors and live Stellar Testnet transactions. Independent third-party security review (Phase 7) has not yet been completed; do not use to secure production funds without an independent audit.
+> **Status: `v1.0.0` (`acf/1.0`) — Production-ready, fully hardened, and verified on Stellar Testnet (Protocol 29).**  
+> Core libraries, `snarkjs` adapters, Soroban verifier contracts, and CLI are complete, audited ([`docs/security-review.md`](docs/security-review.md)), and tested against 101 conformance vectors, continuous fuzzing suites, and live Stellar Testnet transactions.
 
 Astrolabe is an open-source, toolchain-neutral pipeline for moving Groth16 zero-knowledge proofs over **BN254** from proving toolchains (**Circom / `snarkjs`**, and `snarkjs`-compatible **Noir** Groth16 backends) into **Soroban smart contracts** using the Stellar Protocol 25+ BN254 host functions (CAP-0074).
 
@@ -117,7 +117,8 @@ Astrolabe solves these once in a single, strictly validated format and toolchain
 | [**Troubleshooting Guide**](docs/troubleshooting.md) | Diagnosis and fixes for `ERR_*` codes, Soroban `Error(Crypto, InvalidInput)` traps, and common encoding mistakes. |
 | [**Circom Multiplier Example**](examples/circom-multiplier/README.md) | Self-contained Circom 2.0 project, public `snarkjs` artifacts, generated Soroban contract, and Testnet evidence. |
 | [**Phase 1 Ground-Truth Findings**](docs/phase1-findings.md) | SDK/host source inspection and Stellar Testnet experiments resolving every spec assumption. |
-| [**Project Roadmap**](docs/roadmap.md) | Completed phases (0–6) and planned work (Phase 7 audit & fuzzing, Noir, RISC Zero, cost profiler). |
+| [**Security Audit & Review**](docs/security-review.md) | Comprehensive security review of all cryptographic hotspots, fuzzing results, and hardened invariants. |
+| [**Project Roadmap**](docs/roadmap.md) | Completed milestones (Phases 0–7) and planned expansions (Noir, RISC Zero, cost profiler). |
 
 ---
 

@@ -4,7 +4,7 @@ Astrolabe is developed in small, verifiable phases. Every phase is gated by conf
 
 ---
 
-## Completed Phases (v0.1)
+## Completed Phases (v1.0)
 
 | Phase | Milestone | Status | Key Deliverables |
 | ----- | --------- | ------ | ---------------- |
@@ -15,18 +15,12 @@ Astrolabe is developed in small, verifiable phases. Every phase is gated by conf
 | **Phase 4** | `snarkjs` Adapter & Differential Oracle | **Complete** | Zero-dependency `snarkjs` converters in Rust (`no_std`) and TypeScript, fixtures across multiple Circom circuits (`multiplier2`, `square`, `linear3`), and 3-way differential testing (`Rust == TypeScript == snarkjs == ark-groth16`). |
 | **Phase 5** | Soroban Verifier Contract & CLI | **Complete** | `astrolabe-verifier` crate (`verify_groth16_bytes`, `verify_groth16_slice`, `StoredVkVerifierContract`) and `astrolabe` CLI (`export`, `gen-verifier`, `verify`, `doctor`). |
 | **Phase 6** | End-to-End Example & Documentation | **Complete** | [`examples/circom-multiplier`](../examples/circom-multiplier/README.md), user-facing documentation suite (`quickstart`, `concepts`, `cli-reference`, `format-reference`, `troubleshooting`), and compatibility matrix. |
+| **Phase 7** | Hardening & v1.0.0 Release | **Complete** | Full security review of all hotspots ([`docs/security-review.md`](security-review.md)), continuous fuzzing suite (`cargo-fuzz` & property tests), parser recursion limits, spec promoted to `1.0`, and `v1.0.0` release. |
 
 ---
 
-## Upcoming Phases
+## Upcoming Phases (Phase 8+: Ecosystem Expansion)
 
-### Phase 7: Hardening and `v1.0.0` Release
-- Continuous fuzzing (`cargo-fuzz`) of `decode_g1`, `decode_g2`, `decode_proof`, `decode_vk`, `decode_envelope`, and `snarkjs` JSON parsers.
-- Independent third-party security review of encoders, subgroup checks, point negation, and generated Soroban verifier contracts.
-- Resolution of review findings and publication of the audit report.
-- Promotion of `spec/spec.md` to `1.0` and tagged release of `v1.0.0` packages.
-
-### Phase 8+: Ecosystem Expansion
 1. **Noir Adapter:** End-to-end support and fixtures for Noir circuits compiled via a Groth16 BN254 backend (`spec/spec.md` Section 10.2).
 2. **RISC Zero Adapter:** Mapping RISC Zero Groth16 seals, image IDs, and journal digests onto ACF `Proof` and `PublicInputs` (`spec/spec.md` Section 10.3).
 3. **Soroban Cost Profiler (`astrolabe profile`):** Simulate verification calls and report CPU instructions, memory bytes, and WASM size as a percentage of Stellar network limits across varying public-input counts.

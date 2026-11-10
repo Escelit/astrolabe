@@ -1,6 +1,6 @@
-# Astrolabe Canonical Format (`acf/0.1`) Reference
+# Astrolabe Canonical Format (`acf/1.0`) Reference
 
-This document provides a concise developer reference for the **Astrolabe Canonical Format (`acf/0.1`)**. The normative specification is [`spec/spec.md`](../spec.md).
+This document provides a concise developer reference for the **Astrolabe Canonical Format (`acf/1.0`)**. The normative specification is [`spec/spec.md`](spec.md).
 
 ---
 
