@@ -92,3 +92,21 @@ jobs:
 
       - name: Differential tests
         run: make differential
+
+  verify-artifacts-action:
+    name: Verify Proving Artifacts Action
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pinned Rust toolchain
+        run: rustup show active-toolchain
+
+      - name: Verify Circom multiplier artifacts via GitHub Action
+        uses: ./.github/actions/verify-artifacts
+        with:
+          proof: examples/circom-multiplier/artifacts/proof.json
+          vk: examples/circom-multiplier/artifacts/verification_key.json
+          public: examples/circom-multiplier/artifacts/public.json
+          run-profile: "true"

@@ -1,8 +1,8 @@
 # Astrolabe: Project Plan
 
 **Status:** Living document. Update it whenever a phase closes or the scope changes.
-**Last updated:** 2026-11-10
-**Current phase:** Phase 8+ (Expansion)
+**Last updated:** 2026-11-11
+**Current phase:** Complete (v1.0 + Phase 8 Expansion)
 
 > Companion documents: [`spec/spec.md`](spec/spec.md) (format), [`AGENTS.md`](AGENTS.md)
 > (working rules), [`README.md`](README.md) (overview), [`SECURITY.md`](SECURITY.md).
@@ -99,7 +99,7 @@ depend on.
 | 5 | Verifier and CLI | Contract template, `export`, `gen-verifier`, `verify`, `doctor` | Agent, human-reviewed (done) |
 | 6 | Example and docs | End-to-end testnet example, docs site, quickstart | Mixed (done) |
 | 7 | Hardening | Independent review, fuzzing, v1.0 tag | External + human (done) |
-| 8+ | Expansion | Noir, RISC Zero, profiler, templates, CI action | Community + maintainers |
+| 8+ | Expansion | Noir, RISC Zero, profiler, templates, CI action | Community + maintainers (done) |
 
 Time estimates assume one primary maintainer working part-time with agent
 assistance. Treat them as rough planning figures, not commitments.
@@ -258,17 +258,35 @@ recorded in `spec/vectors/onchain/`.
 
 **Exit criteria:** review complete, no open high-severity issues, spec promoted to 1.0 with no remaining **[VERIFY]** items (all criteria satisfied).
 
-### Phase 8+: Expansion (community-driven)
+### Phase 8+: Expansion (complete)
 
-Prioritized by user demand:
+**Delivered:**
+1. **Noir Adapter (`astrolabe-core::noir`, `astrolabe-ts/noir`, CLI `--source noir`):**
+   - Full parser and envelope wrapper for Noir Groth16 proving artifacts (`proof.json`, `verification_key.json`, `public.json`) and unified Noir artifact bundles.
+   - Preserves compiler/backend provenance metadata (`noir_version`, `backend`, `circuit_name`) per ACF Spec Section 10.2 without altering canonical bytes.
+   - Comprehensive test fixtures and suites in Rust and TypeScript.
+2. **RISC Zero Adapter (`astrolabe-core::risc0`, `astrolabe-ts/risc0`, CLI `--source risc0`):**
+   - Maps 256-byte Groth16 seals (`A || B || C`) into canonical `Proof`.
+   - Maps guest `image_id` and `journal_digest` into `PublicInputs` with both standard 4-scalar (`Limb16`, matching Bonsai recursion circuit) and 2-scalar (`Direct`) modes.
+   - Zero-dependency `#![no_std]` NIST SHA-256 implementation in Rust and TypeScript for hashing raw journals.
+   - Supports flat receipts and nested Bonsai Groth16 receipt formats with full validation.
+3. **Soroban Cost Profiler (`astrolabe profile`):**
+   - CLI subcommand simulating Groth16 verification in Soroban `Env` using `env.cost_estimate().budget()`.
+   - Measures exact CPU instruction counts and RAM memory bytes against Stellar Protocol 25 network limits (100M CPU instructions, 40MB memory).
+   - Inspects compiled contract WASM files against the 64 KiB recommended / 128 KiB protocol limits, computing headroom percentages.
+   - Human-readable status breakdown and `--json` flag for CI and automated regression benchmarks.
+4. **Soroban ZK Application Contract Templates:**
+   - `MerkleMembershipContract`: private leaf inclusion verification against authorized Merkle roots in contract instance storage.
+   - `PrivateVoteContract`: anonymous voting with Groth16 eligibility proofs, persistent nullifier registry for double-voting prevention, and option tallying.
+   - `NullifierClaimContract`: private airdrop and reward redemption with nullifier double-claim prevention.
+   - Generator support in `astrolabe gen-verifier --template <merkle-membership|private-vote|nullifier-claim>`.
+   - Unit and integration tests verifying contract lifecycle and nullifier replay protection.
+5. **Continuous Verification GitHub Action:**
+   - Composite GitHub Action `.github/actions/verify-artifacts/action.yml` for automated export, local simulation, and cost profiling of proving artifacts in CI.
+   - Integrated into `.github/workflows/ci.yml` verifying artifacts on every pull request and push to main.
 
-1. **Noir** via a Groth16 backend that emits snarkjs-compatible artifacts
-2. **RISC Zero** seal, image ID, and journal mapping
-3. **Cost profiler** (`profile`): simulate, report instructions and WASM size
-   against Soroban limits
-4. **Templates:** Merkle membership, private vote, nullifier claim
-5. **CI action** that regenerates artifacts and checks they still verify
-6. **Other proof systems and BLS12-381**, after the format has stabilized
+**Future extensions (post-v1.1):**
+- Additional proof systems (e.g. UltraHonk, PLONK) and curves (BLS12-381) after host protocol expansion.
 
 ---
 
@@ -389,4 +407,6 @@ independent review is published, and the quickstart is validated.
 
 ## 17. Changelog
 
+- **2026-11-11:** Phase 8 expansion complete (Noir adapter, RISC Zero adapter, Soroban cost profiler, application contract templates, CI verification action).
+- **2026-11-10:** Phase 7 hardening complete. v1.0.0 released with formal review, fuzzing, and spec promotion.
 - **2026-10-31:** Initial plan. Phase 0 complete, Phase 1 in progress.

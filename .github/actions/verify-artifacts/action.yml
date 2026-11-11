@@ -1,0 +1,54 @@
+name: "Verify ZK Proving Artifacts"
+description: "Exports, validates, and simulates verification of ZK proving artifacts using Astrolabe"
+inputs:
+  proof:
+    description: "Path to proof artifact"
+    required: true
+  vk:
+    description: "Path to verification key artifact"
+    required: true
+  public:
+    description: "Path to public inputs artifact"
+    required: true
+  source:
+    description: "Source proving toolchain (auto, snarkjs, noir, risc0)"
+    required: false
+    default: "auto"
+  format:
+    description: "Export format (acf-hex, envelope, canonical-json, soroban-args)"
+    required: false
+    default: "acf-hex"
+  run-profile:
+    description: "Run Soroban cost profiler (true/false)"
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Export artifacts to ACF
+      shell: bash
+      run: |
+        cargo run -p astrolabe-cli -- export \
+          --source ${{ inputs.source }} \
+          --proof "${{ inputs.proof }}" \
+          --vk "${{ inputs.vk }}" \
+          --public "${{ inputs.public }}" \
+          --format ${{ inputs.format }}
+
+    - name: Verify proof simulation
+      shell: bash
+      run: |
+        cargo run -p astrolabe-cli -- verify \
+          --proof "${{ inputs.proof }}" \
+          --vk "${{ inputs.vk }}" \
+          --public "${{ inputs.public }}"
+
+    - name: Profile Soroban resource budget
+      if: ${{ inputs.run-profile == 'true' }}
+      shell: bash
+      run: |
+        cargo run -p astrolabe-cli -- profile \
+          --proof "${{ inputs.proof }}" \
+          --vk "${{ inputs.vk }}" \
+          --public "${{ inputs.public }}"

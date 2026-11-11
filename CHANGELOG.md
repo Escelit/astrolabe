@@ -6,6 +6,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-11-11
+
+### Overview
+Astrolabe v1.1.0 delivers Phase 8 expansion, adding official adapter support for Noir and RISC Zero proving toolchains, a Soroban cost profiler (`astrolabe profile`), production-ready application contract templates (Merkle membership, private vote, nullifier claim), and automated continuous verification CI actions.
+
+### Added
+- **Noir Groth16 Adapter:** Rust (`astrolabe-core::noir`) and TypeScript (`@astrolabe/ts/noir`) adapters for parsing snarkjs-compatible Noir Groth16 proofs, keys, and unified artifact bundles, recording toolchain/backend provenance metadata per ACF Spec Section 10.2.
+- **RISC Zero Groth16 Adapter:** Rust (`astrolabe-core::risc0`) and TypeScript (`@astrolabe/ts/risc0`) adapters for converting 256-byte Groth16 seals, image IDs, and journal digests into canonical ACF objects, with both 4-limb (`Limb16`, matching Bonsai recursion circuit) and 2-limb (`Direct`) mapping modes.
+- **Pure `#![no_std]` SHA-256:** Zero-dependency, portable NIST SHA-256 implementations in Rust and TypeScript for hashing raw guest journals.
+- **Soroban Cost Profiler (`astrolabe profile`):** CLI tool for simulating Groth16 proof verification inside Soroban `Env`, profiling exact CPU instruction budgets, RAM consumption, and WASM binary sizes against Stellar Protocol 25 network limits.
+- **Soroban ZK Application Contract Templates:**
+  - `MerkleMembershipContract`: private leaf inclusion verification against authorized Merkle roots in contract instance storage.
+  - `PrivateVoteContract`: anonymous voting with Groth16 eligibility proofs, persistent nullifier registry for replay protection, and option tallying.
+  - `NullifierClaimContract`: private airdrop and reward redemption with nullifier double-claim prevention.
+  - Generator support via `astrolabe gen-verifier --template <merkle-membership|private-vote|nullifier-claim>`.
+- **Continuous Artifact Verification GitHub Action:** Composite action `.github/actions/verify-artifacts/action.yml` for automated export, simulation, and cost profiling in CI workflows.
+
+---
+
 ## [1.0.0] - 2026-11-10
 
 ### Overview
