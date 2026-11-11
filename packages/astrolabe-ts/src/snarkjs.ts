@@ -50,6 +50,48 @@ export function parseDecFr(s: string): bigint {
   return val;
 }
 
+/**
+ * Parses a decimal or 0x-prefixed hex string into a canonical BN254 `Fp` coordinate (`< p`).
+ */
+export function parseNumFp(s: string): bigint {
+  if (typeof s !== "string" || s.length === 0) {
+    throw new AcfError("ERR_MALFORMED_INPUT");
+  }
+  if (s.startsWith("0x") || s.startsWith("0X")) {
+    const hex = s.slice(2);
+    if (!/^[0-9a-fA-F]+$/.test(hex) || hex.length > 64) {
+      throw new AcfError("ERR_MALFORMED_INPUT");
+    }
+    const val = BigInt(`0x${hex}`);
+    if (val >= BN254_P) {
+      throw new AcfError("ERR_NON_CANONICAL_FIELD");
+    }
+    return val;
+  }
+  return parseDecFp(s);
+}
+
+/**
+ * Parses a decimal or 0x-prefixed hex string into a canonical BN254 `Fr` scalar (`< r`).
+ */
+export function parseNumFr(s: string): bigint {
+  if (typeof s !== "string" || s.length === 0) {
+    throw new AcfError("ERR_MALFORMED_INPUT");
+  }
+  if (s.startsWith("0x") || s.startsWith("0X")) {
+    const hex = s.slice(2);
+    if (!/^[0-9a-fA-F]+$/.test(hex) || hex.length > 64) {
+      throw new AcfError("ERR_MALFORMED_INPUT");
+    }
+    const val = BigInt(`0x${hex}`);
+    if (val >= BN254_R) {
+      throw new AcfError("ERR_NON_CANONICAL_FIELD");
+    }
+    return val;
+  }
+  return parseDecFr(s);
+}
+
 function parseJsonValue(input: string | unknown): unknown {
   if (typeof input === "string") {
     try {
@@ -68,8 +110,8 @@ function parseSnarkjsG1(raw: unknown): G1 {
   if (raw[2] !== "1") {
     throw new AcfError("ERR_MALFORMED_INPUT");
   }
-  const x = parseDecFp(raw[0]);
-  const y = parseDecFp(raw[1]);
+  const x = parseNumFp(raw[0]);
+  const y = parseNumFp(raw[1]);
   return G1.fromCoordinates(x, y);
 }
 
@@ -92,15 +134,15 @@ function parseSnarkjsG2(raw: unknown): G2 {
   if (!Array.isArray(xArr) || xArr.length !== 2) {
     throw new AcfError("ERR_MALFORMED_INPUT");
   }
-  const x0 = parseDecFp(xArr[0]);
-  const x1 = parseDecFp(xArr[1]);
+  const x0 = parseNumFp(xArr[0]);
+  const x1 = parseNumFp(xArr[1]);
 
   const yArr = raw[1];
   if (!Array.isArray(yArr) || yArr.length !== 2) {
     throw new AcfError("ERR_MALFORMED_INPUT");
   }
-  const y0 = parseDecFp(yArr[0]);
-  const y1 = parseDecFp(yArr[1]);
+  const y0 = parseNumFp(yArr[0]);
+  const y1 = parseNumFp(yArr[1]);
 
   const x: Fp2 = { c0: x0, c1: x1 };
   const y: Fp2 = { c0: y0, c1: y1 };
@@ -211,7 +253,7 @@ export function parseSnarkjsPublicInputs(
     if (typeof item !== "string") {
       throw new AcfError("ERR_MALFORMED_INPUT");
     }
-    return parseDecFr(item);
+    return parseNumFr(item);
   });
 
   return new PublicInputs(inputs);

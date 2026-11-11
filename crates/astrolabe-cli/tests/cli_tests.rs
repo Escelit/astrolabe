@@ -300,3 +300,51 @@ fn test_example_circom_multiplier_artifacts() {
     assert!(out_hex.status.success());
     assert!(String::from_utf8_lossy(&out_hex.stdout).contains("Proof verification SUCCEEDED!"));
 }
+
+#[test]
+fn test_cli_export_noir_artifacts() {
+    let temp_dir = std::env::temp_dir().join("astrolabe_test_noir_artifacts");
+    let _ = std::fs::remove_dir_all(&temp_dir);
+    std::fs::create_dir_all(&temp_dir).unwrap();
+    let bundle_path = temp_dir.join("noir_bundle.json");
+
+    let proof_raw = std::fs::read_to_string(get_fixture_path("multiplier2/proof.json")).unwrap();
+    let vk_raw =
+        std::fs::read_to_string(get_fixture_path("multiplier2/verification_key.json")).unwrap();
+
+    let noir_json = format!(
+        r#"{{
+            "noir_version": "0.33.0",
+            "backend": "sunspot-groth16",
+            "circuit": "multiplier_noir",
+            "proof": {proof_raw},
+            "verification_key": {vk_raw},
+            "public_inputs": ["0x21", "0x0b"]
+        }}"#
+    );
+    std::fs::write(&bundle_path, noir_json).unwrap();
+
+    let output = get_cli_bin()
+        .args([
+            "export",
+            "--source",
+            "noir",
+            "--proof",
+            bundle_path.to_str().unwrap(),
+            "--vk",
+            bundle_path.to_str().unwrap(),
+            "--public",
+            bundle_path.to_str().unwrap(),
+            "--format",
+            "acf-hex",
+        ])
+        .output()
+        .expect("Failed to execute export for Noir");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Noir provenance metadata"));
+    assert!(stdout.contains("04096acfdf56605a9073e3ae082184ce"));
+
+    let _ = std::fs::remove_dir_all(&temp_dir);
+}

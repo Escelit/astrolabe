@@ -18,7 +18,7 @@ use crate::AcfError;
 
 /// Lightweight AST for parsed JSON elements in `#![no_std]`.
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum JsonValue<'a> {
+pub(crate) enum JsonValue<'a> {
     Object(Vec<(&'a str, JsonValue<'a>)>),
     Array(Vec<JsonValue<'a>>),
     String(&'a str),
@@ -28,14 +28,14 @@ enum JsonValue<'a> {
 }
 
 impl<'a> JsonValue<'a> {
-    fn as_object(&self) -> Result<&[(&'a str, JsonValue<'a>)], AcfError> {
+    pub(crate) fn as_object(&self) -> Result<&[(&'a str, JsonValue<'a>)], AcfError> {
         match self {
             Self::Object(entries) => Ok(entries),
             _ => Err(AcfError::MalformedInput),
         }
     }
 
-    fn get_field(&self, key: &str) -> Result<&JsonValue<'a>, AcfError> {
+    pub(crate) fn get_field(&self, key: &str) -> Result<&JsonValue<'a>, AcfError> {
         let entries = self.as_object()?;
         for entry in entries {
             if entry.0 == key {
@@ -45,21 +45,21 @@ impl<'a> JsonValue<'a> {
         Err(AcfError::MalformedInput)
     }
 
-    fn as_array(&self) -> Result<&[JsonValue<'a>], AcfError> {
+    pub(crate) fn as_array(&self) -> Result<&[JsonValue<'a>], AcfError> {
         match self {
             Self::Array(items) => Ok(items),
             _ => Err(AcfError::MalformedInput),
         }
     }
 
-    fn as_str(&self) -> Result<&'a str, AcfError> {
+    pub(crate) fn as_str(&self) -> Result<&'a str, AcfError> {
         match self {
             Self::String(s) => Ok(s),
             _ => Err(AcfError::MalformedInput),
         }
     }
 
-    fn as_u32(&self) -> Result<u32, AcfError> {
+    pub(crate) fn as_u32(&self) -> Result<u32, AcfError> {
         match self {
             Self::Number(s) => parse_u32_ascii(s),
             Self::String(s) => parse_u32_ascii(s),
@@ -276,7 +276,7 @@ impl<'a> JsonParser<'a> {
     }
 }
 
-fn parse_json(input: &str) -> Result<JsonValue<'_>, AcfError> {
+pub(crate) fn parse_json(input: &str) -> Result<JsonValue<'_>, AcfError> {
     let mut parser = JsonParser::new(input);
     let val = parser.parse_value()?;
     parser.skip_whitespace();
@@ -284,6 +284,60 @@ fn parse_json(input: &str) -> Result<JsonValue<'_>, AcfError> {
         return Err(AcfError::MalformedInput);
     }
     Ok(val)
+}
+
+/// Parses a 32-byte hexadecimal string (with optional `0x` / `0X` prefix) into 32 big-endian bytes.
+///
+/// Returns [`AcfError::MalformedInput`] if the string is empty, longer than 64 hex characters,
+/// or contains invalid hex digits.
+pub fn parse_hex_bytes_32(s: &str) -> Result<[u8; 32], AcfError> {
+    let clean = s
+        .strip_prefix("0x")
+        .or_else(|| s.strip_prefix("0X"))
+        .unwrap_or(s);
+    if clean.is_empty() || clean.len() > 64 {
+        return Err(AcfError::MalformedInput);
+    }
+    let mut out = [0u8; 32];
+    let offset = 64usize.saturating_sub(clean.len());
+    for (i, b) in clean.bytes().enumerate() {
+        let val = match b {
+            b'0'..=b'9' => b - b'0',
+            b'a'..=b'f' => b - b'a' + 10,
+            b'A'..=b'F' => b - b'A' + 10,
+            _ => return Err(AcfError::MalformedInput),
+        };
+        let target_idx = i.saturating_add(offset);
+        let byte_pos = target_idx / 2;
+        if let Some(slot) = out.get_mut(byte_pos) {
+            if target_idx % 2 == 0 {
+                *slot |= val << 4;
+            } else {
+                *slot |= val;
+            }
+        }
+    }
+    Ok(out)
+}
+
+/// Parses a decimal or `0x`-prefixed hex string into a canonical [`Fp`] element (`< p`).
+pub fn parse_num_fp(s: &str) -> Result<Fp, AcfError> {
+    if s.starts_with("0x") || s.starts_with("0X") {
+        let bytes = parse_hex_bytes_32(s)?;
+        decode_fp(&bytes)
+    } else {
+        parse_dec_fp(s)
+    }
+}
+
+/// Parses a decimal or `0x`-prefixed hex string into a canonical [`Fr`] scalar (`< r`).
+pub fn parse_num_fr(s: &str) -> Result<Fr, AcfError> {
+    if s.starts_with("0x") || s.starts_with("0X") {
+        let bytes = parse_hex_bytes_32(s)?;
+        decode_fr(&bytes)
+    } else {
+        parse_dec_fr(s)
+    }
 }
 
 /// Parses an ASCII decimal string into four 64-bit limbs, checking for invalid digits
@@ -378,8 +432,8 @@ fn parse_snarkjs_g1(val: &JsonValue<'_>) -> Result<G1, AcfError> {
     let x_str = items.first().ok_or(AcfError::MalformedInput)?.as_str()?;
     let y_str = items.get(1).ok_or(AcfError::MalformedInput)?.as_str()?;
 
-    let x = parse_dec_fp(x_str)?;
-    let y = parse_dec_fp(y_str)?;
+    let x = parse_num_fp(x_str)?;
+    let y = parse_num_fp(y_str)?;
 
     G1::from_coordinates(x, y)
 }
@@ -413,15 +467,15 @@ fn parse_snarkjs_g2(val: &JsonValue<'_>) -> Result<G2, AcfError> {
     if x_arr.len() != 2 {
         return Err(AcfError::MalformedInput);
     }
-    let x0 = parse_dec_fp(x_arr.first().ok_or(AcfError::MalformedInput)?.as_str()?)?;
-    let x1 = parse_dec_fp(x_arr.get(1).ok_or(AcfError::MalformedInput)?.as_str()?)?;
+    let x0 = parse_num_fp(x_arr.first().ok_or(AcfError::MalformedInput)?.as_str()?)?;
+    let x1 = parse_num_fp(x_arr.get(1).ok_or(AcfError::MalformedInput)?.as_str()?)?;
 
     let y_arr = items.get(1).ok_or(AcfError::MalformedInput)?.as_array()?;
     if y_arr.len() != 2 {
         return Err(AcfError::MalformedInput);
     }
-    let y0 = parse_dec_fp(y_arr.first().ok_or(AcfError::MalformedInput)?.as_str()?)?;
-    let y1 = parse_dec_fp(y_arr.get(1).ok_or(AcfError::MalformedInput)?.as_str()?)?;
+    let y0 = parse_num_fp(y_arr.first().ok_or(AcfError::MalformedInput)?.as_str()?)?;
+    let y1 = parse_num_fp(y_arr.get(1).ok_or(AcfError::MalformedInput)?.as_str()?)?;
 
     let x = Fp2::new(x0, x1);
     let y = Fp2::new(y0, y1);
@@ -524,7 +578,7 @@ pub fn parse_snarkjs_public_inputs(json_str: &str) -> Result<PublicInputs, AcfEr
     let mut inputs = Vec::with_capacity(items.len());
     for item in items {
         let dec_str = item.as_str()?;
-        let fr = parse_dec_fr(dec_str)?;
+        let fr = parse_num_fr(dec_str)?;
         inputs.push(fr);
     }
     Ok(PublicInputs { inputs })

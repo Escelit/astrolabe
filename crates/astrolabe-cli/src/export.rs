@@ -1,7 +1,10 @@
 //! Implementation of `astrolabe export` command.
 
 use crate::error::CliError;
-use astrolabe_core::snarkjs::{parse_snarkjs_proof, parse_snarkjs_public_inputs, parse_snarkjs_vk};
+use astrolabe_core::noir::{
+    extract_noir_metadata, parse_noir_bundle, parse_noir_proof, parse_noir_public_inputs,
+    parse_noir_vk,
+};
 use astrolabe_core::{
     decode_envelope, decode_proof, decode_public_inputs, decode_vk, encode_envelope, encode_proof,
     encode_public_inputs, encode_vk, to_canonical_json, ArtifactKind, Envelope,
@@ -23,9 +26,27 @@ pub enum ExportFormat {
     SorobanArgs,
 }
 
+/// Source proving toolchain.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum, Default)]
+pub enum ArtifactSource {
+    /// Auto-detect format from file contents.
+    #[default]
+    Auto,
+    /// Circom / snarkjs Groth16 JSON artifacts.
+    Snarkjs,
+    /// Noir Groth16 artifacts (individual files or unified bundle).
+    Noir,
+    /// RISC Zero Groth16 receipt/seal and journal artifacts.
+    Risc0,
+}
+
 /// Arguments for `astrolabe export`.
 #[derive(Debug, clap::Args)]
 pub struct ExportArgs {
+    /// Source proving toolchain (auto, snarkjs, noir, risc0).
+    #[arg(long, value_enum, default_value = "auto")]
+    pub source: ArtifactSource,
+
     /// Path to proof artifact (snarkjs proof.json or ACF binary/hex).
     #[arg(long)]
     pub proof: Option<PathBuf>,
@@ -152,38 +173,53 @@ pub(crate) fn load_artifact_from_path(
             }
         }
 
-        // Try snarkjs formats
+        // Try Noir / snarkjs formats
         if let Some(kind) = expected_kind {
             match kind {
                 ArtifactKind::Proof => {
-                    let p = parse_snarkjs_proof(trimmed)?;
+                    let p = parse_noir_proof(trimmed)?;
                     let bytes = encode_proof(&p).to_vec();
                     return Ok(LoadedArtifact::Proof(Box::new(p), bytes));
                 }
                 ArtifactKind::VerificationKey => {
-                    let vk = parse_snarkjs_vk(trimmed)?;
+                    let vk = parse_noir_vk(trimmed)?;
                     let bytes = encode_vk(&vk);
                     return Ok(LoadedArtifact::Vk(Box::new(vk), bytes));
                 }
                 ArtifactKind::PublicInputs => {
-                    let pi = parse_snarkjs_public_inputs(trimmed)?;
+                    let pi = parse_noir_public_inputs(trimmed)?;
                     let bytes = encode_public_inputs(&pi);
                     return Ok(LoadedArtifact::PublicInputs(pi, bytes));
                 }
             }
         }
 
-        // Auto-detect snarkjs JSON
+        // Auto-detect Noir bundle or snarkjs JSON
+        if trimmed.contains("\"noir_version\"") || trimmed.contains("\"backend\"") {
+            if let Ok(bundle) = parse_noir_bundle(trimmed) {
+                if let Some(ref p) = bundle.proof {
+                    let bytes = encode_proof(p).to_vec();
+                    return Ok(LoadedArtifact::Proof(Box::new(*p), bytes));
+                } else if let Some(ref vk) = bundle.vk {
+                    let bytes = encode_vk(vk);
+                    return Ok(LoadedArtifact::Vk(Box::new(vk.clone()), bytes));
+                } else if let Some(ref pi) = bundle.public_inputs {
+                    let bytes = encode_public_inputs(pi);
+                    return Ok(LoadedArtifact::PublicInputs(pi.clone(), bytes));
+                }
+            }
+        }
+
         if trimmed.contains("\"pi_a\"") {
-            let p = parse_snarkjs_proof(trimmed)?;
+            let p = parse_noir_proof(trimmed)?;
             let bytes = encode_proof(&p).to_vec();
             return Ok(LoadedArtifact::Proof(Box::new(p), bytes));
         } else if trimmed.contains("\"vk_alpha_1\"") {
-            let vk = parse_snarkjs_vk(trimmed)?;
+            let vk = parse_noir_vk(trimmed)?;
             let bytes = encode_vk(&vk);
             return Ok(LoadedArtifact::Vk(Box::new(vk), bytes));
         } else if trimmed.starts_with('[') {
-            let pi = parse_snarkjs_public_inputs(trimmed)?;
+            let pi = parse_noir_public_inputs(trimmed)?;
             let bytes = encode_public_inputs(&pi);
             return Ok(LoadedArtifact::PublicInputs(pi, bytes));
         }
@@ -213,6 +249,27 @@ pub fn run_export(args: ExportArgs) -> Result<(), CliError> {
         return Err(CliError::MissingArgument(
             "At least one of --proof, --vk, or --public must be provided".to_string(),
         ));
+    }
+
+    // Inspect Noir provenance metadata if present (Spec Section 10.2)
+    for path in [&args.proof, &args.vk, &args.public]
+        .iter()
+        .filter_map(|p| p.as_ref())
+    {
+        if let Ok(text) = fs::read_to_string(path) {
+            if let Ok(meta) = extract_noir_metadata(&text) {
+                if meta.noir_version.is_some()
+                    || meta.backend.is_some()
+                    || meta.circuit_name.is_some()
+                {
+                    println!(
+                        "Noir provenance metadata: version={:?}, backend={:?}, circuit={:?}",
+                        meta.noir_version, meta.backend, meta.circuit_name
+                    );
+                    break;
+                }
+            }
+        }
     }
 
     // Special case: --format soroban-args prints the combined invocation
