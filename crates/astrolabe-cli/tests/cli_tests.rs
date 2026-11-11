@@ -453,3 +453,39 @@ fn test_cli_profile_human_and_json() {
     assert_eq!(report["cpu_limit"], 100_000_000);
     assert_eq!(report["memory_limit"], 41_943_040);
 }
+
+#[test]
+fn test_cli_gen_verifier_templates() {
+    let temp_dir = std::env::temp_dir().join("astrolabe_test_templates");
+    let _ = std::fs::remove_dir_all(&temp_dir);
+    std::fs::create_dir_all(&temp_dir).unwrap();
+
+    let vk_path = get_fixture_path("square/verification_key.json");
+
+    for (template, expected_content) in [
+        ("merkle-membership", "MerkleMembershipContract"),
+        ("private-vote", "PrivateVoteContract"),
+        ("nullifier-claim", "NullifierClaimContract"),
+    ] {
+        let out_file = temp_dir.join(format!("{template}.rs"));
+        let output = get_cli_bin()
+            .args([
+                "gen-verifier",
+                "--vk",
+                vk_path.to_str().unwrap(),
+                "--template",
+                template,
+                "--out",
+                out_file.to_str().unwrap(),
+            ])
+            .output()
+            .expect("Failed to execute gen-verifier with template");
+
+        assert!(output.status.success());
+        assert!(out_file.exists());
+        let content = std::fs::read_to_string(&out_file).unwrap();
+        assert!(content.contains(expected_content));
+    }
+
+    let _ = std::fs::remove_dir_all(&temp_dir);
+}

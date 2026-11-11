@@ -368,3 +368,11 @@ impl StoredVkVerifierContract {
         verify_groth16_bytes(&env, &vk, &proof, &public_inputs)
     }
 }
+
+pub mod templates;
+
+#[cfg(any(not(target_family = "wasm"), feature = "stored-contract"))]
+pub use templates::{
+    MerkleMembershipContract, MerkleMembershipContractClient, NullifierClaimContract,
+    NullifierClaimContractClient, PrivateVoteContract, PrivateVoteContractClient,
+};
