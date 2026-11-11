@@ -348,3 +348,54 @@ fn test_cli_export_noir_artifacts() {
 
     let _ = std::fs::remove_dir_all(&temp_dir);
 }
+
+#[test]
+fn test_cli_export_risc0_artifacts() {
+    let temp_dir = std::env::temp_dir().join("astrolabe_test_risc0_artifacts");
+    let _ = std::fs::remove_dir_all(&temp_dir);
+    std::fs::create_dir_all(&temp_dir).unwrap();
+    let receipt_path = temp_dir.join("risc0_receipt.json");
+
+    let proof_raw = std::fs::read_to_string(get_fixture_path("multiplier2/proof.json")).unwrap();
+    let original_proof = astrolabe_core::parse_snarkjs_proof(&proof_raw).unwrap();
+    let seal_hex = hex::encode(original_proof.encode());
+
+    let image_id_hex = "1111111111111111111111111111111111111111111111111111111111111111";
+    let journal_hex = "2222222222222222222222222222222222222222222222222222222222222222";
+
+    let receipt_json = format!(
+        r#"{{
+            "seal": "0x{seal_hex}",
+            "image_id": "0x{image_id_hex}",
+            "journal": "0x{journal_hex}"
+        }}"#
+    );
+    std::fs::write(&receipt_path, receipt_json).unwrap();
+
+    let output = get_cli_bin()
+        .args([
+            "export",
+            "--source",
+            "risc0",
+            "--proof",
+            receipt_path.to_str().unwrap(),
+            "--public",
+            receipt_path.to_str().unwrap(),
+            "--format",
+            "acf-hex",
+        ])
+        .output()
+        .expect("Failed to execute export for RISC Zero");
+
+    if !output.status.success() {
+        eprintln!("STDOUT: {}", String::from_utf8_lossy(&output.stdout));
+        eprintln!("STDERR: {}", String::from_utf8_lossy(&output.stderr));
+    }
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains(&seal_hex[0..32]));
+    // In limb16, length of public inputs is 4 scalars = 128 bytes = 256 hex chars
+    assert!(stdout.contains("0000000000000000000000000000000011111111111111111111111111111111"));
+
+    let _ = std::fs::remove_dir_all(&temp_dir);
+}

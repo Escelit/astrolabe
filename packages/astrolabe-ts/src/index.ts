@@ -15,3 +15,4 @@ export * from "./envelope.js";
 export * from "./canonical-json.js";
 export * from "./snarkjs.js";
 export * from "./noir.js";
+export * from "./risc0.js";

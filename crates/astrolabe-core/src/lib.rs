@@ -25,6 +25,7 @@ mod envelope;
 mod field;
 mod groth16;
 pub mod noir;
+pub mod risc0;
 pub mod snarkjs;
 mod uint256;
 
@@ -48,6 +49,11 @@ pub use noir::{
     extract_noir_metadata, parse_noir_bundle, parse_noir_proof, parse_noir_proof_envelope,
     parse_noir_public_inputs, parse_noir_public_inputs_envelope, parse_noir_vk,
     parse_noir_vk_envelope, NoirBundle, NoirMetadata,
+};
+pub use risc0::{
+    map_risc0_journal_and_image_id, map_risc0_seal, parse_risc0_proof_envelope,
+    parse_risc0_public_inputs_envelope, parse_risc0_receipt_json, sha256 as risc0_sha256,
+    Risc0PublicInputsMode, Risc0Receipt,
 };
 pub use snarkjs::{
     parse_dec_fp, parse_dec_fr, parse_hex_bytes_32, parse_num_fp, parse_num_fr,

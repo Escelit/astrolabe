@@ -2,9 +2,9 @@
 
 use crate::error::CliError;
 use astrolabe_core::noir::{
-    extract_noir_metadata, parse_noir_bundle, parse_noir_proof, parse_noir_public_inputs,
-    parse_noir_vk,
+    extract_noir_metadata, parse_noir_proof, parse_noir_public_inputs, parse_noir_vk,
 };
+use astrolabe_core::risc0::{parse_risc0_receipt_json, Risc0PublicInputsMode};
 use astrolabe_core::{
     decode_envelope, decode_proof, decode_public_inputs, decode_vk, encode_envelope, encode_proof,
     encode_public_inputs, encode_vk, to_canonical_json, ArtifactKind, Envelope,
@@ -62,6 +62,10 @@ pub struct ExportArgs {
     /// Desired export format.
     #[arg(long, value_enum, default_value = "acf-hex")]
     pub format: ExportFormat,
+
+    /// RISC Zero public input mapping mode (limb16 or direct).
+    #[arg(long, default_value = "limb16")]
+    pub risc0_mapping: String,
 
     /// Optional output directory to write exported artifacts.
     #[arg(long)]
@@ -173,6 +177,22 @@ pub(crate) fn load_artifact_from_path(
             }
         }
 
+        // Auto-detect RISC Zero receipt JSON
+        if trimmed.contains("\"seal\"")
+            || (trimmed.contains("\"image_id\"") && trimmed.contains("\"journal\""))
+        {
+            let mode = Risc0PublicInputsMode::Limb16;
+            if let Ok(receipt) = parse_risc0_receipt_json(trimmed, mode) {
+                if expected_kind == Some(ArtifactKind::PublicInputs) {
+                    let bytes = encode_public_inputs(&receipt.public_inputs);
+                    return Ok(LoadedArtifact::PublicInputs(receipt.public_inputs, bytes));
+                } else {
+                    let bytes = encode_proof(&receipt.proof).to_vec();
+                    return Ok(LoadedArtifact::Proof(Box::new(receipt.proof), bytes));
+                }
+            }
+        }
+
         // Try Noir / snarkjs formats
         if let Some(kind) = expected_kind {
             match kind {
@@ -190,22 +210,6 @@ pub(crate) fn load_artifact_from_path(
                     let pi = parse_noir_public_inputs(trimmed)?;
                     let bytes = encode_public_inputs(&pi);
                     return Ok(LoadedArtifact::PublicInputs(pi, bytes));
-                }
-            }
-        }
-
-        // Auto-detect Noir bundle or snarkjs JSON
-        if trimmed.contains("\"noir_version\"") || trimmed.contains("\"backend\"") {
-            if let Ok(bundle) = parse_noir_bundle(trimmed) {
-                if let Some(ref p) = bundle.proof {
-                    let bytes = encode_proof(p).to_vec();
-                    return Ok(LoadedArtifact::Proof(Box::new(*p), bytes));
-                } else if let Some(ref vk) = bundle.vk {
-                    let bytes = encode_vk(vk);
-                    return Ok(LoadedArtifact::Vk(Box::new(vk.clone()), bytes));
-                } else if let Some(ref pi) = bundle.public_inputs {
-                    let bytes = encode_public_inputs(pi);
-                    return Ok(LoadedArtifact::PublicInputs(pi.clone(), bytes));
                 }
             }
         }
