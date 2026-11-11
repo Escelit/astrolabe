@@ -9,6 +9,7 @@ mod doctor;
 mod error;
 mod export;
 mod gen_verifier;
+mod profile;
 mod verify;
 
 use clap::{Parser, Subcommand};
@@ -16,6 +17,7 @@ use doctor::{run_doctor, DoctorArgs};
 use error::CliError;
 use export::{run_export, ExportArgs};
 use gen_verifier::{run_gen_verifier, GenVerifierArgs};
+use profile::{run_profile, ProfileArgs};
 use std::process::ExitCode;
 use verify::{run_verify, VerifyArgs};
 
@@ -41,6 +43,9 @@ enum Commands {
     /// Verify a Groth16 proof locally (host simulation) or against a deployed contract.
     Verify(VerifyArgs),
 
+    /// Profile resource consumption (CPU instructions, memory bytes, WASM size) against Soroban limits.
+    Profile(ProfileArgs),
+
     /// Check development environment, protocol compatibility, and toolchain readiness.
     Doctor(DoctorArgs),
 }
@@ -52,6 +57,7 @@ fn main() -> ExitCode {
         Commands::Export(args) => run_export(args),
         Commands::GenVerifier(args) => run_gen_verifier(args),
         Commands::Verify(args) => run_verify(args),
+        Commands::Profile(args) => run_profile(args),
         Commands::Doctor(args) => run_doctor(args),
     };
 

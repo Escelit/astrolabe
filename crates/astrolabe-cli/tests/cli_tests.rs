@@ -399,3 +399,57 @@ fn test_cli_export_risc0_artifacts() {
 
     let _ = std::fs::remove_dir_all(&temp_dir);
 }
+
+#[test]
+fn test_cli_profile_human_and_json() {
+    let proof_path = get_fixture_path("multiplier2/proof.json");
+    let vk_path = get_fixture_path("multiplier2/verification_key.json");
+    let pub_path = get_fixture_path("multiplier2/public.json");
+
+    // 1. Human-readable profile
+    let output = get_cli_bin()
+        .args([
+            "profile",
+            "--proof",
+            proof_path.to_str().unwrap(),
+            "--vk",
+            vk_path.to_str().unwrap(),
+            "--public",
+            pub_path.to_str().unwrap(),
+        ])
+        .output()
+        .expect("Failed to execute profile");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Astrolabe Cost Profiler"));
+    assert!(stdout.contains("CPU Instructions"));
+    assert!(stdout.contains("RAM Memory Bytes"));
+    assert!(stdout.contains("Overall Status: ✓ PASSED ALL SOROBAN CONSTRAINTS"));
+
+    // 2. JSON structured profile
+    let output_json = get_cli_bin()
+        .args([
+            "profile",
+            "--proof",
+            proof_path.to_str().unwrap(),
+            "--vk",
+            vk_path.to_str().unwrap(),
+            "--public",
+            pub_path.to_str().unwrap(),
+            "--json",
+        ])
+        .output()
+        .expect("Failed to execute profile with --json");
+
+    assert!(output_json.status.success());
+    let report: serde_json::Value =
+        serde_json::from_slice(&output_json.stdout).expect("Failed to parse profile JSON");
+    assert_eq!(report["proof_valid"], true);
+    assert_eq!(report["n_public_inputs"], 2);
+    assert_eq!(report["n_ic_points"], 3);
+    assert!(report["cpu_instructions"].as_u64().unwrap() > 0);
+    assert!(report["memory_bytes"].as_u64().unwrap() > 0);
+    assert_eq!(report["cpu_limit"], 100_000_000);
+    assert_eq!(report["memory_limit"], 41_943_040);
+}
