@@ -8,12 +8,32 @@
 #![cfg(any(not(target_family = "wasm"), feature = "stored-contract"))]
 
 use crate::{parse_vk, verify_groth16_bytes, VerifierError};
-use soroban_sdk::{contract, contractimpl, symbol_short, Address, Bytes, BytesN, Env, Symbol, Vec};
+use soroban_sdk::{
+    contract, contractimpl, contracttype, symbol_short, Address, Bytes, BytesN, Env, Symbol, Vec,
+};
 
 const STORAGE_KEY_ADMIN: Symbol = symbol_short!("admin");
 const STORAGE_KEY_VK: Symbol = symbol_short!("vk");
 const STORAGE_KEY_ROOT: Symbol = symbol_short!("root");
 const STORAGE_KEY_PROPOSAL: Symbol = symbol_short!("proposal");
+
+/// Typed persistent storage keys for [`PrivateVoteContract`].
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum VoteStorageKey {
+    /// Tracks whether a voter nullifier has already been spent.
+    Nullifier(BytesN<32>),
+    /// Stores the cumulative vote tally for a given option ID.
+    Tally(u32),
+}
+
+/// Typed persistent storage keys for [`NullifierClaimContract`].
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ClaimStorageKey {
+    /// Tracks whether a claim nullifier has already been redeemed.
+    Nullifier(BytesN<32>),
+}
 
 /// Soroban contract template for private Merkle tree leaf membership verification.
 #[contract]
@@ -58,6 +78,30 @@ impl MerkleMembershipContract {
         env.storage()
             .instance()
             .get(&STORAGE_KEY_ROOT)
+            .ok_or(VerifierError::Unsupported)
+    }
+
+    /// Updates the stored verification key. Requires admin authorization.
+    pub fn set_vk(env: Env, admin: Address, vk: Bytes) -> Result<(), VerifierError> {
+        admin.require_auth();
+        let stored_admin: Address = env
+            .storage()
+            .instance()
+            .get(&STORAGE_KEY_ADMIN)
+            .ok_or(VerifierError::Unsupported)?;
+        if admin != stored_admin {
+            return Err(VerifierError::Unsupported);
+        }
+        let _parsed = parse_vk(&env, &vk)?;
+        env.storage().instance().set(&STORAGE_KEY_VK, &vk);
+        Ok(())
+    }
+
+    /// Returns the currently stored verification key.
+    pub fn get_vk(env: Env) -> Result<Bytes, VerifierError> {
+        env.storage()
+            .instance()
+            .get(&STORAGE_KEY_VK)
             .ok_or(VerifierError::Unsupported)
     }
 
@@ -120,8 +164,9 @@ impl PrivateVoteContract {
         nullifier: BytesN<32>,
         option: u32,
     ) -> Result<u64, VerifierError> {
+        let nullifier_key = VoteStorageKey::Nullifier(nullifier.clone());
         // Prevent double-voting: nullifier must not have been spent
-        if env.storage().persistent().has(&nullifier) {
+        if env.storage().persistent().has(&nullifier_key) {
             return Err(VerifierError::InvalidProof);
         }
 
@@ -150,7 +195,7 @@ impl PrivateVoteContract {
         // Public inputs: [voter_root, nullifier, proposal, option]
         let mut pub_inputs = Vec::new(&env);
         pub_inputs.push_back(voter_root);
-        pub_inputs.push_back(nullifier.clone());
+        pub_inputs.push_back(nullifier);
         pub_inputs.push_back(proposal);
         pub_inputs.push_back(option_bytes);
 
@@ -160,24 +205,73 @@ impl PrivateVoteContract {
         }
 
         // Mark nullifier spent
-        env.storage().persistent().set(&nullifier, &true);
+        env.storage().persistent().set(&nullifier_key, &true);
 
         // Increment tally for option
-        let current_tally: u64 = env.storage().persistent().get(&option).unwrap_or(0);
+        let tally_key = VoteStorageKey::Tally(option);
+        let current_tally: u64 = env.storage().persistent().get(&tally_key).unwrap_or(0);
         let new_tally = current_tally.saturating_add(1);
-        env.storage().persistent().set(&option, &new_tally);
+        env.storage().persistent().set(&tally_key, &new_tally);
 
         Ok(new_tally)
     }
 
+    /// Updates the eligible voter roll root. Requires admin authorization.
+    pub fn set_voter_root(
+        env: Env,
+        admin: Address,
+        voter_root: BytesN<32>,
+    ) -> Result<(), VerifierError> {
+        admin.require_auth();
+        let stored_admin: Address = env
+            .storage()
+            .instance()
+            .get(&STORAGE_KEY_ADMIN)
+            .ok_or(VerifierError::Unsupported)?;
+        if admin != stored_admin {
+            return Err(VerifierError::Unsupported);
+        }
+        env.storage().instance().set(&STORAGE_KEY_ROOT, &voter_root);
+        Ok(())
+    }
+
+    /// Returns the currently configured voter roll Merkle root.
+    pub fn get_voter_root(env: Env) -> Result<BytesN<32>, VerifierError> {
+        env.storage()
+            .instance()
+            .get(&STORAGE_KEY_ROOT)
+            .ok_or(VerifierError::Unsupported)
+    }
+
+    /// Returns the configured proposal identifier.
+    pub fn get_proposal_id(env: Env) -> Result<BytesN<32>, VerifierError> {
+        env.storage()
+            .instance()
+            .get(&STORAGE_KEY_PROPOSAL)
+            .ok_or(VerifierError::Unsupported)
+    }
+
+    /// Returns the stored verification key.
+    pub fn get_vk(env: Env) -> Result<Bytes, VerifierError> {
+        env.storage()
+            .instance()
+            .get(&STORAGE_KEY_VK)
+            .ok_or(VerifierError::Unsupported)
+    }
+
     /// Returns `true` iff the specified nullifier has already voted.
     pub fn has_voted(env: Env, nullifier: BytesN<32>) -> bool {
-        env.storage().persistent().has(&nullifier)
+        env.storage()
+            .persistent()
+            .has(&VoteStorageKey::Nullifier(nullifier))
     }
 
     /// Returns the current vote count for a given option.
     pub fn get_tally(env: Env, option: u32) -> u64 {
-        env.storage().persistent().get(&option).unwrap_or(0)
+        env.storage()
+            .persistent()
+            .get(&VoteStorageKey::Tally(option))
+            .unwrap_or(0)
     }
 }
 
@@ -212,8 +306,9 @@ impl NullifierClaimContract {
         recipient: BytesN<32>,
         amount: u64,
     ) -> Result<bool, VerifierError> {
+        let nullifier_key = ClaimStorageKey::Nullifier(nullifier.clone());
         // Prevent double-claim
-        if env.storage().persistent().has(&nullifier) {
+        if env.storage().persistent().has(&nullifier_key) {
             return Err(VerifierError::InvalidProof);
         }
 
@@ -237,7 +332,7 @@ impl NullifierClaimContract {
         // Public inputs: [claim_root, nullifier, recipient, amount]
         let mut pub_inputs = Vec::new(&env);
         pub_inputs.push_back(claim_root);
-        pub_inputs.push_back(nullifier.clone());
+        pub_inputs.push_back(nullifier);
         pub_inputs.push_back(recipient);
         pub_inputs.push_back(amount_bytes);
 
@@ -247,13 +342,50 @@ impl NullifierClaimContract {
         }
 
         // Mark nullifier spent
-        env.storage().persistent().set(&nullifier, &true);
+        env.storage().persistent().set(&nullifier_key, &true);
 
         Ok(true)
     }
 
+    /// Updates the authorized claim Merkle root. Requires admin authorization.
+    pub fn set_claim_root(
+        env: Env,
+        admin: Address,
+        claim_root: BytesN<32>,
+    ) -> Result<(), VerifierError> {
+        admin.require_auth();
+        let stored_admin: Address = env
+            .storage()
+            .instance()
+            .get(&STORAGE_KEY_ADMIN)
+            .ok_or(VerifierError::Unsupported)?;
+        if admin != stored_admin {
+            return Err(VerifierError::Unsupported);
+        }
+        env.storage().instance().set(&STORAGE_KEY_ROOT, &claim_root);
+        Ok(())
+    }
+
+    /// Returns the currently authorized claim Merkle root.
+    pub fn get_claim_root(env: Env) -> Result<BytesN<32>, VerifierError> {
+        env.storage()
+            .instance()
+            .get(&STORAGE_KEY_ROOT)
+            .ok_or(VerifierError::Unsupported)
+    }
+
+    /// Returns the stored verification key.
+    pub fn get_vk(env: Env) -> Result<Bytes, VerifierError> {
+        env.storage()
+            .instance()
+            .get(&STORAGE_KEY_VK)
+            .ok_or(VerifierError::Unsupported)
+    }
+
     /// Returns `true` iff the specified claim nullifier has already been claimed.
     pub fn is_claimed(env: Env, nullifier: BytesN<32>) -> bool {
-        env.storage().persistent().has(&nullifier)
+        env.storage()
+            .persistent()
+            .has(&ClaimStorageKey::Nullifier(nullifier))
     }
 }
