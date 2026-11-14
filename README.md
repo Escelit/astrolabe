@@ -2,9 +2,6 @@
 
 **The canonical format, verification toolkit, and smart contract library for zero-knowledge proofs on Stellar Soroban.**
 
-> **Status: `v1.1.0` (`acf/1.0`) — Production-ready, audited, and verified on Stellar Testnet (Protocol 29).**  
-> Core libraries, `snarkjs` / Noir / RISC Zero adapters, Soroban verifier contracts, application templates, and CLI are complete, security-reviewed ([`docs/security-review.md`](docs/security-review.md)), and continuously tested against conformance vectors, coverage-guided fuzzers, 3-way differential suites, and live Stellar Testnet transactions.
-
 Astrolabe is an open-source, toolchain-neutral pipeline for moving Groth16 zero-knowledge proofs over **BN254** from proving toolchains (**Circom / `snarkjs`**, **Noir**, and **RISC Zero**) into **Soroban smart contracts** on Stellar using the Protocol 25+ BN254 host functions ([CAP-0074](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0074.md)).
 
 ---
@@ -276,10 +273,10 @@ Every implementation (`astrolabe-core`, `astrolabe-verifier`, `astrolabe-ts`) ma
 | [**Format Reference (`acf/1.0`)**](docs/format-reference.md) | Byte-offset diagrams and tables for every ACF primitive, Groth16 object, envelope, and Soroban type. |
 | [**Troubleshooting Guide**](docs/troubleshooting.md) | Diagnosis and fixes for `ERR_*` codes, Soroban `Error(Crypto, InvalidInput)` traps, and common encoding mistakes. |
 | [**Circom Multiplier Example**](examples/circom-multiplier/README.md) | Self-contained Circom 2.0 project, public `snarkjs` artifacts, generated Soroban contract, and Testnet evidence. |
-| [**Phase 1 Ground-Truth Findings**](docs/phase1-findings.md) | SDK/host source inspection and Stellar Testnet experiments resolving every spec assumption. |
-| [**Security Audit & Review**](docs/security-review.md) | Line-by-line security review of all cryptographic hotspots, fuzzing results, and hardened invariants. |
-| [**Project Roadmap**](docs/roadmap.md) | Completed milestones and ecosystem expansion details. |
-| [**Release Guide & Changelog**](CHANGELOG.md) | Release history ([`CHANGELOG.md`](CHANGELOG.md)) and release engineering procedures ([`docs/release.md`](docs/release.md)). |
+| [**BN254 Host Behavior Reference**](docs/phase1-findings.md) | Empirical verification of Soroban BN254 host functions, SDK types, and Stellar Testnet transactions. |
+| [**Security Review**](docs/security-review.md) | Review of cryptographic invariants, edge cases, and fuzzing coverage. |
+| [**Project Roadmap**](docs/roadmap.md) | Project milestones and planned expansions. |
+| [**Changelog**](CHANGELOG.md) | Release history ([`CHANGELOG.md`](CHANGELOG.md)) and release procedures ([`docs/release.md`](docs/release.md)). |
 
 ---
 
@@ -359,7 +356,7 @@ make fuzz
 - **BN254 security margin:** The BN254 curve provides ~100 bits of classical security (below 128 bits). Document this assumption when designing high-value protocols.
 - **Public data only:** Astrolabe libraries process public proofs, verification keys, and public inputs. They never handle private witnesses, secret keys, or ceremony toxic waste.
 
-See [`docs/security-review.md`](docs/security-review.md) for the full line-by-line audit report of Astrolabe's cryptographic invariants. If you discover a security vulnerability, please do not open a public issue; contact the maintainers privately.
+See [`docs/security-review.md`](docs/security-review.md) for details on Astrolabe's cryptographic invariants and validation rules. If you discover a security vulnerability, please do not open a public issue; contact the maintainers privately.
 
 ---
 
