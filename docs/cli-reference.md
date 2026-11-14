@@ -45,14 +45,17 @@ astrolabe export [OPTIONS]
 
 | Flag | Type | Default | Description |
 | ---- | ---- | ------- | ----------- |
+| `--source <SOURCE>` | `ArtifactSource` | `auto` | Source proving toolchain: `auto`, `snarkjs`, `noir`, or `risc0` |
+| `--bundle <PATH>` | `PathBuf` | — | Path to unified Noir bundle JSON or RISC Zero receipt JSON |
 | `--proof <PATH>` | `PathBuf` | — | Path to proof file (`proof.json`, `.astr`, `.hex`, or canonical JSON) |
 | `--vk <PATH>` | `PathBuf` | — | Path to verification key file (`verification_key.json`, `.astr`, `.hex`, or canonical JSON) |
 | `--public <PATH>` | `PathBuf` | — | Path to public inputs file (`public.json`, `.astr`, `.hex`, or canonical JSON) |
+| `--risc0-mapping <MODE>` | `Risc0Mapping` | `limb16` | RISC Zero public input mapping mode: `limb16` (4 scalars) or `direct` (2 scalars) |
 | `--format <FORMAT>` | `ExportFormat` | `acf-hex` | Output format: `acf-hex`, `envelope`, `canonical-json`, or `soroban-args` |
 | `--out <FILE>` | `PathBuf` | stdout | Write output to a single file (when exporting one artifact) |
 | `--out-dir <DIR>` | `PathBuf` | — | Write exported files (`proof.<ext>`, `vk.<ext>`, `public.<ext>`) into `<DIR>` |
 
-*(At least one of `--proof`, `--vk`, or `--public` is required.)*
+*(At least one of `--bundle`, `--proof`, `--vk`, or `--public` is required.)*
 
 ### Output Formats (`--format`)
 
@@ -79,6 +82,12 @@ astrolabe export --proof proof.json --format envelope --out proof.astr
 
 # Print ready-to-copy arguments for `stellar contract invoke`:
 astrolabe export --proof proof.json --public public.json --format soroban-args
+
+# Export all artifacts from a unified Noir bundle:
+astrolabe export --source noir --bundle noir_bundle.json --format acf-hex --out-dir ./artifacts
+
+# Export a RISC Zero Groth16 receipt using direct 2-scalar public inputs:
+astrolabe export --source risc0 --bundle risc0_receipt.json --risc0-mapping direct --format acf-hex
 ```
 
 ---
@@ -100,6 +109,7 @@ astrolabe gen-verifier --vk <PATH> --out <PATH> [OPTIONS]
 | `--vk <PATH>` | `PathBuf` | *(required)* | Path to verification key (`verification_key.json`, `.astr`, `.hex`, or canonical JSON) |
 | `--out <PATH>`, `-o` | `PathBuf` | *(required)* | Output path: if it ends with `.rs`, writes a single Rust file; otherwise scaffolds a Cargo package directory (`Cargo.toml`, `src/lib.rs`, `README.md`) |
 | `--mode <MODE>` | `VerifierMode` | `baked` | `baked` (embeds `VK_BYTES` constant in WASM) or `stored` (stores VK in Soroban instance storage with admin control) |
+| `--template <TEMPLATE>` | `TemplateKind` | `standard` | Contract template: `standard`, `merkle-membership`, `private-vote`, or `nullifier-claim` |
 | `--name <NAME>` | `String` | `Groth16Verifier` | Rust struct name for the generated `#[contract]` |
 | `--force`, `-f` | `bool` | `false` | Overwrite output file or non-empty directory if it already exists |
 
@@ -177,7 +187,46 @@ astrolabe verify \
 
 ---
 
-## 4. `astrolabe doctor`
+## 4. `astrolabe profile`
+
+Simulates Groth16 proof verification inside the local Soroban host (`soroban-env-host 29.0.1`) with resource metering enabled, reporting CPU instructions, memory bytes, and optional WASM binary size against Stellar Protocol 25+ network limits.
+
+### Usage
+
+```bash
+astrolabe profile --vk <PATH> --proof <PATH> --public <PATH> [OPTIONS]
+```
+
+### Options
+
+| Flag | Type | Default | Description |
+| ---- | ---- | ------- | ----------- |
+| `--vk <PATH>` | `PathBuf` | *(required)* | Path to verification key (`verification_key.json`, `.astr`, `.hex`, or canonical JSON) |
+| `--proof <PATH>` | `PathBuf` | *(required)* | Path to proof (`proof.json`, `.astr`, `.hex`, or canonical JSON) |
+| `--public <PATH>` | `PathBuf` | *(required)* | Path to public inputs (`public.json`, `.astr`, `.hex`, or canonical JSON) |
+| `--wasm <PATH>` | `PathBuf` | — | Optional path to compiled contract `.wasm` binary to check against the 64 KiB size threshold |
+| `--json` | `bool` | `false` | Emit structured JSON report (`ProfileReport`) for CI and automation |
+
+### Examples
+
+```bash
+# Human-readable Soroban resource profile:
+astrolabe profile \
+  --vk examples/circom-multiplier/artifacts/verification_key.json \
+  --proof examples/circom-multiplier/artifacts/proof.json \
+  --public examples/circom-multiplier/artifacts/public.json
+
+# Structured JSON output for CI checks:
+astrolabe profile \
+  --vk examples/circom-multiplier/artifacts/verification_key.json \
+  --proof examples/circom-multiplier/artifacts/proof.json \
+  --public examples/circom-multiplier/artifacts/public.json \
+  --json
+```
+
+---
+
+## 5. `astrolabe doctor`
 
 Inspects your local machine for required and optional tools (`rustc`, `wasm32v1-none` target, `cargo`, `stellar` CLI, `circom`, `snarkjs`, `node`, `pnpm`) and probes Stellar RPC health.
 

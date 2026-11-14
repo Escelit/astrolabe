@@ -4,7 +4,7 @@ Astrolabe is developed in small, verifiable phases. Every phase is gated by conf
 
 ---
 
-## Completed Phases (v1.0)
+## Completed Phases (v1.0 – v1.1)
 
 | Phase | Milestone | Status | Key Deliverables |
 | ----- | --------- | ------ | ---------------- |
@@ -16,13 +16,12 @@ Astrolabe is developed in small, verifiable phases. Every phase is gated by conf
 | **Phase 5** | Soroban Verifier Contract & CLI | **Complete** | `astrolabe-verifier` crate (`verify_groth16_bytes`, `verify_groth16_slice`, `StoredVkVerifierContract`) and `astrolabe` CLI (`export`, `gen-verifier`, `verify`, `doctor`). |
 | **Phase 6** | End-to-End Example & Documentation | **Complete** | [`examples/circom-multiplier`](../examples/circom-multiplier/README.md), user-facing documentation suite (`quickstart`, `concepts`, `cli-reference`, `format-reference`, `troubleshooting`), and compatibility matrix. |
 | **Phase 7** | Hardening & v1.0.0 Release | **Complete** | Full security review of all hotspots ([`docs/security-review.md`](security-review.md)), continuous fuzzing suite (`cargo-fuzz` & property tests), parser recursion limits, spec promoted to `1.0`, and `v1.0.0` release. |
+| **Phase 8** | Multi-Toolchain Adapters, Profiler & Templates (`v1.1.0`) | **Complete** | Noir Groth16 adapter (`astrolabe_core::noir` & `astrolabe-ts`), RISC Zero Groth16 adapter (`astrolabe_core::risc0` & `astrolabe-ts` with `#![no_std]` SHA-256), `astrolabe profile` cost profiler, ZK application contract templates (`MerkleMembershipContract`, `PrivateVoteContract`, `NullifierClaimContract`), and GitHub CI Action (`.github/actions/verify-artifacts`). |
 
 ---
 
-## Upcoming Phases (Phase 8+: Ecosystem Expansion)
+## Future Explorations (Reserved in Spec)
 
-1. **Noir Adapter:** End-to-end support and fixtures for Noir circuits compiled via a Groth16 BN254 backend (`spec/spec.md` Section 10.2).
-2. **RISC Zero Adapter:** Mapping RISC Zero Groth16 seals, image IDs, and journal digests onto ACF `Proof` and `PublicInputs` (`spec/spec.md` Section 10.3).
-3. **Soroban Cost Profiler (`astrolabe profile`):** Simulate verification calls and report CPU instructions, memory bytes, and WASM size as a percentage of Stellar network limits across varying public-input counts.
-4. **Application Starter Templates:** Ready-to-clone circuit + contract templates for Merkle tree membership, nullifier-guarded private claims, and anonymous voting.
-5. **GitHub CI Action:** Reusable GitHub Action to validate ACF artifacts and run local Soroban verification in downstream repositories.
+1. **Additional Curves:** BLS12-381 (`CurveId` `0x02` reserved in `spec/spec.md` Section 5).
+2. **Additional Proof Systems:** PLONK (`0x02`) and UltraHonk (`0x03`) verifiers as Soroban host support evolves.
+3. **Multi-Scalar Multiplication (`bn254_g1_msm`) Threshold Tuning:** Automatic dispatch between iterative `g1_mul` + `g1_add` and `bn254_g1_msm` for circuits with high public-input counts.
