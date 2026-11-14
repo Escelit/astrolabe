@@ -116,4 +116,28 @@ fn test_risc0_rejections() {
     let err = map_risc0_journal_and_image_id(&r_be, &[0u8; 32], Risc0PublicInputsMode::Direct)
         .unwrap_err();
     assert_eq!(err, AcfError::NonCanonicalField);
+
+    // Odd-length hex in journal string must be rejected as MalformedInput
+    let p_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../spec/fixtures/snarkjs/multiplier2/proof.json");
+    let proof_json = fs::read_to_string(p_path).unwrap();
+    let seal_hex = to_hex(&parse_snarkjs_proof(&proof_json).unwrap().encode());
+    let odd_journal_json = format!(
+        r#"{{"seal":"0x{seal_hex}","image_id":"0x{}","journal":"0xabc"}}"#,
+        "11".repeat(32)
+    );
+    assert_eq!(
+        parse_risc0_receipt_json(&odd_journal_json, Risc0PublicInputsMode::Limb16).unwrap_err(),
+        AcfError::MalformedInput
+    );
+
+    // Out-of-range byte (> 255) in journal array must be rejected as MalformedInput
+    let bad_array_json = format!(
+        r#"{{"seal":"0x{seal_hex}","image_id":"0x{}","journal":[256, 1, 2]}}"#,
+        "11".repeat(32)
+    );
+    assert_eq!(
+        parse_risc0_receipt_json(&bad_array_json, Risc0PublicInputsMode::Limb16).unwrap_err(),
+        AcfError::MalformedInput
+    );
 }

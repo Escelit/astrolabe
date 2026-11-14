@@ -333,6 +333,9 @@ pub fn parse_risc0_receipt_json(
                 if clean.len() == 64 {
                     parse_hex_bytes_32(clean)?
                 } else {
+                    if !clean.len().is_multiple_of(2) {
+                        return Err(AcfError::MalformedInput);
+                    }
                     // Raw hex bytes of journal: hash with sha256
                     let mut raw_bytes = Vec::with_capacity(clean.len() / 2);
                     for i in 0..(clean.len() / 2) {

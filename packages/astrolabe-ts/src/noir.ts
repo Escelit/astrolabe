@@ -105,6 +105,16 @@ export function extractNoirMetadata(input: string | unknown): NoirMetadata {
   return meta;
 }
 
+function normalizeNoirCurve(val: unknown): unknown {
+  if (val && typeof val === "object" && !Array.isArray(val)) {
+    const obj = val as Record<string, unknown>;
+    if (obj.curve === "bn254") {
+      return { ...obj, curve: "bn128" };
+    }
+  }
+  return val;
+}
+
 /**
  * Parses and converts a Noir Groth16 `proof.json` (or bundle) into a canonical [`Proof`].
  */
@@ -113,10 +123,10 @@ export function parseNoirProof(input: string | unknown): Proof {
   if (root && typeof root === "object" && !Array.isArray(root)) {
     const obj = root as Record<string, unknown>;
     if (obj.proof) {
-      return parseSnarkjsProof(obj.proof);
+      return parseSnarkjsProof(normalizeNoirCurve(obj.proof));
     }
   }
-  return parseSnarkjsProof(root);
+  return parseSnarkjsProof(normalizeNoirCurve(root));
 }
 
 /**
@@ -127,13 +137,13 @@ export function parseNoirVk(input: string | unknown): VerificationKey {
   if (root && typeof root === "object" && !Array.isArray(root)) {
     const obj = root as Record<string, unknown>;
     if (obj.verification_key) {
-      return parseSnarkjsVk(obj.verification_key);
+      return parseSnarkjsVk(normalizeNoirCurve(obj.verification_key));
     }
     if (obj.vk) {
-      return parseSnarkjsVk(obj.vk);
+      return parseSnarkjsVk(normalizeNoirCurve(obj.vk));
     }
   }
-  return parseSnarkjsVk(root);
+  return parseSnarkjsVk(normalizeNoirCurve(root));
 }
 
 /**
@@ -174,10 +184,10 @@ export function parseNoirBundle(input: string | unknown): NoirBundle {
   if (root && typeof root === "object" && !Array.isArray(root)) {
     const obj = root as Record<string, unknown>;
     if (obj.proof) {
-      proof = parseSnarkjsProof(obj.proof);
+      proof = parseSnarkjsProof(normalizeNoirCurve(obj.proof));
     }
     if (obj.verification_key || obj.vk) {
-      vk = parseSnarkjsVk(obj.verification_key ?? obj.vk);
+      vk = parseSnarkjsVk(normalizeNoirCurve(obj.verification_key ?? obj.vk));
     }
     const pi = obj.public_inputs ?? obj.public;
     if (Array.isArray(pi)) {

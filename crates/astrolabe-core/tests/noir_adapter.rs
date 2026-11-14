@@ -102,3 +102,16 @@ fn test_noir_rejections() {
         AcfError::NonCanonicalField
     );
 }
+
+#[test]
+fn test_noir_standalone_bn254_curve_alias() {
+    let proof_str = fixture_path("multiplier2", "proof.json").replace("\"bn128\"", "\"bn254\"");
+    let vk_str =
+        fixture_path("multiplier2", "verification_key.json").replace("\"bn128\"", "\"bn254\"");
+
+    let proof = parse_noir_proof(&proof_str).expect("standalone Noir proof with bn254 should pass");
+    let vk = parse_noir_vk(&vk_str).expect("standalone Noir vk with bn254 should pass");
+
+    assert!(!proof.a.is_infinity());
+    assert_eq!(vk.n_public(), 2);
+}

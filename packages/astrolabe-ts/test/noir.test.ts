@@ -88,4 +88,20 @@ describe("Noir Groth16 Adapter", () => {
       "ERR_NON_CANONICAL_FIELD",
     );
   });
+
+  it("accepts standalone and bundled Noir artifacts with curve 'bn254'", () => {
+    const proofStr = fixturePath("multiplier2", "proof.json").replace(
+      '"bn128"',
+      '"bn254"',
+    );
+    const vkStr = fixturePath("multiplier2", "verification_key.json").replace(
+      '"bn128"',
+      '"bn254"',
+    );
+
+    const proof = parseNoirProof(proofStr);
+    const vk = parseNoirVk(vkStr);
+    expect(proof.a.isInfinity()).toBe(false);
+    expect(vk.nPublic).toBe(2);
+  });
 });

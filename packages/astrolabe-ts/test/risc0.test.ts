@@ -88,5 +88,31 @@ describe("RISC Zero Groth16 Adapter", () => {
     expect(() =>
       mapRisc0JournalAndImageId(rBytes, new Uint8Array(32), "direct"),
     ).toThrowError("ERR_NON_CANONICAL_FIELD");
+
+    // Odd-length hex in journal and out-of-range byte array elements must throw ERR_MALFORMED_INPUT
+    const proofPath = path.resolve(
+      __dirname,
+      "../../../spec/fixtures/snarkjs/multiplier2/proof.json",
+    );
+    const sealHex = bytesToHex(
+      encodeProof(parseSnarkjsProof(fs.readFileSync(proofPath, "utf-8"))),
+    );
+    const oddJournal = JSON.stringify({
+      seal: `0x${sealHex}`,
+      image_id: `0x${"11".repeat(32)}`,
+      journal: "0xabc",
+    });
+    expect(() => parseRisc0Receipt(oddJournal)).toThrowError(
+      "ERR_MALFORMED_INPUT",
+    );
+
+    const badByteArray = JSON.stringify({
+      seal: `0x${sealHex}`,
+      image_id: `0x${"11".repeat(32)}`,
+      journal: [256, -1, 2],
+    });
+    expect(() => parseRisc0Receipt(badByteArray)).toThrowError(
+      "ERR_MALFORMED_INPUT",
+    );
   });
 });

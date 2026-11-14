@@ -163,7 +163,10 @@ impl<'a> JsonParser<'a> {
                 return Ok(JsonValue::String(s));
             }
             if b == b'\\' {
-                // Skip escape character
+                // Reject dangling escape at end of input and skip escaped byte
+                if self.bytes.get(self.cursor.saturating_add(1)).is_none() {
+                    return Err(AcfError::MalformedInput);
+                }
                 self.cursor = self.cursor.saturating_add(2);
             } else {
                 self.cursor = self.cursor.saturating_add(1);

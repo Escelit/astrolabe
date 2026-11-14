@@ -12,10 +12,7 @@ use alloc::vec::Vec;
 
 use crate::envelope::{ArtifactKind, CurveId, Envelope, EnvelopePayload, ProofSystemId};
 use crate::groth16::{Proof, PublicInputs, VerificationKey};
-use crate::snarkjs::{
-    parse_json, parse_num_fr, parse_snarkjs_proof, parse_snarkjs_public_inputs, parse_snarkjs_vk,
-    JsonValue,
-};
+use crate::snarkjs::{parse_json, parse_num_fr, parse_snarkjs_public_inputs, JsonValue};
 use crate::AcfError;
 
 /// Toolchain and backend provenance metadata for Noir proving artifacts (Spec Section 10.2).
@@ -120,7 +117,7 @@ pub fn parse_noir_proof(input: &str) -> Result<Proof, AcfError> {
         // Nested under "proof" in bundle
         parse_snarkjs_proof_value(proof_val)
     } else {
-        parse_snarkjs_proof(input)
+        parse_snarkjs_proof_value(&root)
     }
 }
 
@@ -137,7 +134,7 @@ pub fn parse_noir_vk(input: &str) -> Result<VerificationKey, AcfError> {
     {
         parse_snarkjs_vk_value(vk_val)
     } else {
-        parse_snarkjs_vk(input)
+        parse_snarkjs_vk_value(&root)
     }
 }
 

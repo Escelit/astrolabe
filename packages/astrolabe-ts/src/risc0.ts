@@ -229,6 +229,34 @@ function bytesToBigInt(bytes: Uint8Array): bigint {
   return BigInt(`0x${hex}`);
 }
 
+function parseByteArray(input: unknown, expectedLen?: number): Uint8Array {
+  if (!Array.isArray(input)) {
+    throw new AcfError("ERR_MALFORMED_INPUT");
+  }
+  if (expectedLen !== undefined && input.length !== expectedLen) {
+    throw new AcfError("ERR_MALFORMED_INPUT");
+  }
+  const out = new Uint8Array(input.length);
+  for (let i = 0; i < input.length; i++) {
+    const val = input[i];
+    if (typeof val !== "number" || !Number.isInteger(val) || val < 0 || val > 255) {
+      throw new AcfError("ERR_MALFORMED_INPUT");
+    }
+    out[i] = val;
+  }
+  return out;
+}
+
+function parseDigestVal(val: unknown): Uint8Array {
+  if (typeof val === "string") {
+    return parseBytes32(val);
+  }
+  if (Array.isArray(val)) {
+    return parseByteArray(val, 32);
+  }
+  throw new AcfError("ERR_MALFORMED_INPUT");
+}
+
 function parseJsonValue(input: string | unknown): unknown {
   if (typeof input === "string") {
     try {
@@ -268,9 +296,12 @@ export function parseRisc0Receipt(
   let sealBytes: Uint8Array;
   if (typeof sealVal === "string") {
     const clean = sealVal.startsWith("0x") || sealVal.startsWith("0X") ? sealVal.slice(2) : sealVal;
+    if (clean.length !== 512) {
+      throw new AcfError("ERR_BAD_LENGTH");
+    }
     sealBytes = hexToBytes(clean);
   } else if (Array.isArray(sealVal)) {
-    sealBytes = new Uint8Array(sealVal);
+    sealBytes = parseByteArray(sealVal, 256);
   } else {
     throw new AcfError("ERR_MALFORMED_INPUT");
   }
@@ -287,17 +318,13 @@ export function parseRisc0Receipt(
   if (!idVal) {
     throw new AcfError("ERR_MALFORMED_INPUT");
   }
-  const imageId = parseBytes32(
-    typeof idVal === "string" ? idVal : new Uint8Array(idVal as number[]),
-  );
+  const imageId = parseDigestVal(idVal);
 
   // 3. Extract journal or journalDigest
   let journalDigest: Uint8Array;
   const jdVal = obj.journal_digest ?? obj.journalDigest;
   if (jdVal) {
-    journalDigest = parseBytes32(
-      typeof jdVal === "string" ? jdVal : new Uint8Array(jdVal as number[]),
-    );
+    journalDigest = parseDigestVal(jdVal);
   } else if (obj.journal) {
     if (typeof obj.journal === "string") {
       const clean = obj.journal.startsWith("0x") || obj.journal.startsWith("0X")
@@ -309,7 +336,7 @@ export function parseRisc0Receipt(
         journalDigest = sha256(hexToBytes(clean));
       }
     } else if (Array.isArray(obj.journal)) {
-      journalDigest = sha256(new Uint8Array(obj.journal));
+      journalDigest = sha256(parseByteArray(obj.journal));
     } else {
       throw new AcfError("ERR_MALFORMED_INPUT");
     }
