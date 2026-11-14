@@ -5,6 +5,7 @@ use astrolabe_core::noir::{
     extract_noir_metadata, parse_noir_proof, parse_noir_public_inputs, parse_noir_vk,
 };
 use astrolabe_core::risc0::{parse_risc0_receipt_json, Risc0PublicInputsMode};
+use astrolabe_core::snarkjs::{parse_snarkjs_proof, parse_snarkjs_public_inputs, parse_snarkjs_vk};
 use astrolabe_core::{
     decode_envelope, decode_proof, decode_public_inputs, decode_vk, encode_envelope, encode_proof,
     encode_public_inputs, encode_vk, to_canonical_json, ArtifactKind, Envelope,
@@ -40,12 +41,35 @@ pub enum ArtifactSource {
     Risc0,
 }
 
+/// RISC Zero public input mapping mode.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum, Default)]
+pub enum Risc0Mapping {
+    /// 4-scalar 16-byte limb split (`[image_id_hi, image_id_lo, journal_hi, journal_lo]`).
+    #[default]
+    Limb16,
+    /// 2-scalar direct representation (`[image_id, journal_digest]`).
+    Direct,
+}
+
+impl From<Risc0Mapping> for Risc0PublicInputsMode {
+    fn from(val: Risc0Mapping) -> Self {
+        match val {
+            Risc0Mapping::Limb16 => Self::Limb16,
+            Risc0Mapping::Direct => Self::Direct,
+        }
+    }
+}
+
 /// Arguments for `astrolabe export`.
 #[derive(Debug, clap::Args)]
 pub struct ExportArgs {
     /// Source proving toolchain (auto, snarkjs, noir, risc0).
     #[arg(long, value_enum, default_value = "auto")]
     pub source: ArtifactSource,
+
+    /// Path to unified bundle or receipt JSON (Noir bundle or RISC Zero receipt).
+    #[arg(long)]
+    pub bundle: Option<PathBuf>,
 
     /// Path to proof artifact (snarkjs proof.json or ACF binary/hex).
     #[arg(long)]
@@ -64,8 +88,8 @@ pub struct ExportArgs {
     pub format: ExportFormat,
 
     /// RISC Zero public input mapping mode (limb16 or direct).
-    #[arg(long, default_value = "limb16")]
-    pub risc0_mapping: String,
+    #[arg(long, value_enum, default_value = "limb16")]
+    pub risc0_mapping: Risc0Mapping,
 
     /// Optional output directory to write exported artifacts.
     #[arg(long)]
@@ -86,7 +110,120 @@ pub(crate) fn load_artifact_from_path(
     path: &Path,
     expected_kind: Option<ArtifactKind>,
 ) -> Result<LoadedArtifact, CliError> {
+    load_artifact_with_options(
+        path,
+        expected_kind,
+        ArtifactSource::Auto,
+        Risc0PublicInputsMode::Limb16,
+    )
+}
+
+pub(crate) fn load_artifact_with_options(
+    path: &Path,
+    expected_kind: Option<ArtifactKind>,
+    source: ArtifactSource,
+    risc0_mode: Risc0PublicInputsMode,
+) -> Result<LoadedArtifact, CliError> {
     let raw = fs::read(path).map_err(|e| CliError::Io(path.display().to_string(), e))?;
+
+    // Explicit toolchain dispatch when --source is not auto
+    if source != ArtifactSource::Auto {
+        let text = std::str::from_utf8(&raw).map_err(|_| {
+            CliError::Other(format!(
+                "Expected UTF-8 JSON artifact for --source {:?} in '{}'",
+                source,
+                path.display()
+            ))
+        })?;
+        let trimmed = text.trim();
+        match source {
+            ArtifactSource::Risc0 => {
+                let receipt = parse_risc0_receipt_json(trimmed, risc0_mode)?;
+                return match expected_kind {
+                    Some(ArtifactKind::PublicInputs) => {
+                        let bytes = encode_public_inputs(&receipt.public_inputs);
+                        Ok(LoadedArtifact::PublicInputs(receipt.public_inputs, bytes))
+                    }
+                    Some(ArtifactKind::VerificationKey) => Err(CliError::Other(
+                        "RISC Zero receipts do not contain a verification key".to_string(),
+                    )),
+                    _ => {
+                        let bytes = encode_proof(&receipt.proof).to_vec();
+                        Ok(LoadedArtifact::Proof(Box::new(receipt.proof), bytes))
+                    }
+                };
+            }
+            ArtifactSource::Snarkjs => {
+                return match expected_kind {
+                    Some(ArtifactKind::Proof) => {
+                        let p = parse_snarkjs_proof(trimmed)?;
+                        let bytes = encode_proof(&p).to_vec();
+                        Ok(LoadedArtifact::Proof(Box::new(p), bytes))
+                    }
+                    Some(ArtifactKind::VerificationKey) => {
+                        let vk = parse_snarkjs_vk(trimmed)?;
+                        let bytes = encode_vk(&vk);
+                        Ok(LoadedArtifact::Vk(Box::new(vk), bytes))
+                    }
+                    Some(ArtifactKind::PublicInputs) => {
+                        let pi = parse_snarkjs_public_inputs(trimmed)?;
+                        let bytes = encode_public_inputs(&pi);
+                        Ok(LoadedArtifact::PublicInputs(pi, bytes))
+                    }
+                    None => {
+                        if trimmed.contains("\"pi_a\"") {
+                            let p = parse_snarkjs_proof(trimmed)?;
+                            let bytes = encode_proof(&p).to_vec();
+                            Ok(LoadedArtifact::Proof(Box::new(p), bytes))
+                        } else if trimmed.contains("\"vk_alpha_1\"") {
+                            let vk = parse_snarkjs_vk(trimmed)?;
+                            let bytes = encode_vk(&vk);
+                            Ok(LoadedArtifact::Vk(Box::new(vk), bytes))
+                        } else {
+                            let pi = parse_snarkjs_public_inputs(trimmed)?;
+                            let bytes = encode_public_inputs(&pi);
+                            Ok(LoadedArtifact::PublicInputs(pi, bytes))
+                        }
+                    }
+                };
+            }
+            ArtifactSource::Noir => {
+                return match expected_kind {
+                    Some(ArtifactKind::Proof) => {
+                        let p = parse_noir_proof(trimmed)?;
+                        let bytes = encode_proof(&p).to_vec();
+                        Ok(LoadedArtifact::Proof(Box::new(p), bytes))
+                    }
+                    Some(ArtifactKind::VerificationKey) => {
+                        let vk = parse_noir_vk(trimmed)?;
+                        let bytes = encode_vk(&vk);
+                        Ok(LoadedArtifact::Vk(Box::new(vk), bytes))
+                    }
+                    Some(ArtifactKind::PublicInputs) => {
+                        let pi = parse_noir_public_inputs(trimmed)?;
+                        let bytes = encode_public_inputs(&pi);
+                        Ok(LoadedArtifact::PublicInputs(pi, bytes))
+                    }
+                    None => {
+                        if trimmed.contains("\"pi_a\"") {
+                            let p = parse_noir_proof(trimmed)?;
+                            let bytes = encode_proof(&p).to_vec();
+                            Ok(LoadedArtifact::Proof(Box::new(p), bytes))
+                        } else if trimmed.contains("\"vk_alpha_1\"") {
+                            let vk = parse_noir_vk(trimmed)?;
+                            let bytes = encode_vk(&vk);
+                            Ok(LoadedArtifact::Vk(Box::new(vk), bytes))
+                        } else {
+                            let pi = parse_noir_public_inputs(trimmed)?;
+                            let bytes = encode_public_inputs(&pi);
+                            Ok(LoadedArtifact::PublicInputs(pi, bytes))
+                        }
+                    }
+                };
+            }
+            ArtifactSource::Auto => unreachable!(),
+        }
+    }
 
     // 1. Try decoding as binary envelope first
     if raw.len() >= 8 && &raw[0..4] == b"ASTR" {
@@ -181,8 +318,7 @@ pub(crate) fn load_artifact_from_path(
         if trimmed.contains("\"seal\"")
             || (trimmed.contains("\"image_id\"") && trimmed.contains("\"journal\""))
         {
-            let mode = Risc0PublicInputsMode::Limb16;
-            if let Ok(receipt) = parse_risc0_receipt_json(trimmed, mode) {
+            if let Ok(receipt) = parse_risc0_receipt_json(trimmed, risc0_mode) {
                 if expected_kind == Some(ArtifactKind::PublicInputs) {
                     let bytes = encode_public_inputs(&receipt.public_inputs);
                     return Ok(LoadedArtifact::PublicInputs(receipt.public_inputs, bytes));
@@ -248,12 +384,43 @@ pub(crate) fn load_artifact_from_path(
     }
 }
 
-pub fn run_export(args: ExportArgs) -> Result<(), CliError> {
+pub fn run_export(mut args: ExportArgs) -> Result<(), CliError> {
+    // Expand --bundle into --proof, --vk, --public based on bundle contents if not explicitly set
+    if let Some(ref bundle_path) = args.bundle {
+        let text = fs::read_to_string(bundle_path)
+            .map_err(|e| CliError::Io(bundle_path.display().to_string(), e))?;
+        if args.proof.is_none()
+            && (text.contains("\"proof\"")
+                || text.contains("\"pi_a\"")
+                || text.contains("\"seal\""))
+        {
+            args.proof = Some(bundle_path.clone());
+        }
+        if args.vk.is_none()
+            && (text.contains("\"verification_key\"")
+                || text.contains("\"vk\"")
+                || text.contains("\"vk_alpha_1\""))
+        {
+            args.vk = Some(bundle_path.clone());
+        }
+        if args.public.is_none()
+            && (text.contains("\"public_inputs\"")
+                || text.contains("\"public\"")
+                || text.contains("\"journal\"")
+                || text.contains("\"journal_digest\"")
+                || text.contains("\"journalDigest\""))
+        {
+            args.public = Some(bundle_path.clone());
+        }
+    }
+
     if args.proof.is_none() && args.vk.is_none() && args.public.is_none() {
         return Err(CliError::MissingArgument(
-            "At least one of --proof, --vk, or --public must be provided".to_string(),
+            "At least one of --bundle, --proof, --vk, or --public must be provided".to_string(),
         ));
     }
+
+    let risc0_mode: Risc0PublicInputsMode = args.risc0_mapping.into();
 
     // Inspect Noir provenance metadata if present (Spec Section 10.2)
     for path in [&args.proof, &args.vk, &args.public]
@@ -278,11 +445,12 @@ pub fn run_export(args: ExportArgs) -> Result<(), CliError> {
 
     // Special case: --format soroban-args prints the combined invocation
     if args.format == ExportFormat::SorobanArgs {
-        return export_soroban_args(&args);
+        return export_soroban_args(&args, risc0_mode);
     }
 
     if let Some(ref path) = args.proof {
-        let artifact = load_artifact_from_path(path, Some(ArtifactKind::Proof))?;
+        let artifact =
+            load_artifact_with_options(path, Some(ArtifactKind::Proof), args.source, risc0_mode)?;
         export_single(
             artifact,
             "proof",
@@ -293,7 +461,12 @@ pub fn run_export(args: ExportArgs) -> Result<(), CliError> {
     }
 
     if let Some(ref path) = args.vk {
-        let artifact = load_artifact_from_path(path, Some(ArtifactKind::VerificationKey))?;
+        let artifact = load_artifact_with_options(
+            path,
+            Some(ArtifactKind::VerificationKey),
+            args.source,
+            risc0_mode,
+        )?;
         export_single(
             artifact,
             "vk",
@@ -304,7 +477,12 @@ pub fn run_export(args: ExportArgs) -> Result<(), CliError> {
     }
 
     if let Some(ref path) = args.public {
-        let artifact = load_artifact_from_path(path, Some(ArtifactKind::PublicInputs))?;
+        let artifact = load_artifact_with_options(
+            path,
+            Some(ArtifactKind::PublicInputs),
+            args.source,
+            risc0_mode,
+        )?;
         export_single(
             artifact,
             "public",
@@ -372,19 +550,28 @@ fn export_single(
     Ok(())
 }
 
-fn export_soroban_args(args: &ExportArgs) -> Result<(), CliError> {
+fn export_soroban_args(
+    args: &ExportArgs,
+    risc0_mode: Risc0PublicInputsMode,
+) -> Result<(), CliError> {
     let mut proof_hex = String::new();
     let mut pub_signals_hex = Vec::new();
 
     if let Some(ref path) = args.proof {
-        let artifact = load_artifact_from_path(path, Some(ArtifactKind::Proof))?;
+        let artifact =
+            load_artifact_with_options(path, Some(ArtifactKind::Proof), args.source, risc0_mode)?;
         if let LoadedArtifact::Proof(_, bytes) = artifact {
             proof_hex = hex::encode(bytes);
         }
     }
 
     if let Some(ref path) = args.public {
-        let artifact = load_artifact_from_path(path, Some(ArtifactKind::PublicInputs))?;
+        let artifact = load_artifact_with_options(
+            path,
+            Some(ArtifactKind::PublicInputs),
+            args.source,
+            risc0_mode,
+        )?;
         if let LoadedArtifact::PublicInputs(_, bytes) = artifact {
             for chunk in bytes.chunks_exact(32) {
                 pub_signals_hex.push(format!("\"{}\"", hex::encode(chunk)));

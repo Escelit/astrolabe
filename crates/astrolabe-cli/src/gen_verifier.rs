@@ -99,7 +99,14 @@ pub fn run_gen_verifier(args: GenVerifierArgs) -> Result<(), CliError> {
         fs::write(out_path, code).map_err(|e| CliError::Io(out_path.display().to_string(), e))?;
         println!("Generated verifier contract source: {}", out_path.display());
     } else {
-        generate_package(out_path, contract_name, &code, args.mode, args.force)?;
+        generate_package(
+            out_path,
+            contract_name,
+            &code,
+            args.mode,
+            args.template,
+            args.force,
+        )?;
     }
 
     Ok(())
@@ -233,6 +240,7 @@ fn generate_package(
     contract_name: &str,
     lib_rs_content: &str,
     mode: VerifierMode,
+    template: TemplateKind,
     force: bool,
 ) -> Result<(), CliError> {
     if dir.exists() && !force {
@@ -249,17 +257,17 @@ fn generate_package(
     let src_dir = dir.join("src");
     fs::create_dir_all(&src_dir).map_err(|e| CliError::Io(src_dir.display().to_string(), e))?;
 
-    let verifier_dep = match mode {
-        VerifierMode::Baked => r#"astrolabe-verifier = "0.1.0""#,
-        VerifierMode::Stored => {
-            r#"astrolabe-verifier = { version = "0.1.0", features = ["stored-contract"] }"#
-        }
+    let needs_stored_feature = mode == VerifierMode::Stored || template != TemplateKind::Standard;
+    let verifier_dep = if needs_stored_feature {
+        r#"astrolabe-verifier = { version = "1.0.0", features = ["stored-contract"] }"#
+    } else {
+        r#"astrolabe-verifier = "1.0.0""#
     };
 
     let cargo_toml = format!(
         r#"[package]
 name = "{pkg_name}"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 
 [lib]

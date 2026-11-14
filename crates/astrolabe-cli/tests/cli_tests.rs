@@ -329,11 +329,7 @@ fn test_cli_export_noir_artifacts() {
             "export",
             "--source",
             "noir",
-            "--proof",
-            bundle_path.to_str().unwrap(),
-            "--vk",
-            bundle_path.to_str().unwrap(),
-            "--public",
+            "--bundle",
             bundle_path.to_str().unwrap(),
             "--format",
             "acf-hex",
@@ -345,6 +341,7 @@ fn test_cli_export_noir_artifacts() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains("Noir provenance metadata"));
     assert!(stdout.contains("04096acfdf56605a9073e3ae082184ce"));
+    assert!(stdout.contains("0c728c8c242d4b792f7b625c3173ae4f"));
 
     let _ = std::fs::remove_dir_all(&temp_dir);
 }
@@ -377,10 +374,10 @@ fn test_cli_export_risc0_artifacts() {
             "export",
             "--source",
             "risc0",
-            "--proof",
+            "--bundle",
             receipt_path.to_str().unwrap(),
-            "--public",
-            receipt_path.to_str().unwrap(),
+            "--risc0-mapping",
+            "limb16",
             "--format",
             "acf-hex",
         ])
@@ -396,6 +393,25 @@ fn test_cli_export_risc0_artifacts() {
     assert!(stdout.contains(&seal_hex[0..32]));
     // In limb16, length of public inputs is 4 scalars = 128 bytes = 256 hex chars
     assert!(stdout.contains("0000000000000000000000000000000011111111111111111111111111111111"));
+
+    // Also test --risc0-mapping direct (2 scalars = 64 bytes = 128 hex chars)
+    let output_direct = get_cli_bin()
+        .args([
+            "export",
+            "--source",
+            "risc0",
+            "--public",
+            receipt_path.to_str().unwrap(),
+            "--risc0-mapping",
+            "direct",
+            "--format",
+            "acf-hex",
+        ])
+        .output()
+        .expect("Failed to execute export for RISC Zero direct mode");
+    assert!(output_direct.status.success());
+    let stdout_direct = String::from_utf8_lossy(&output_direct.stdout);
+    assert_eq!(stdout_direct.trim(), format!("{image_id_hex}{journal_hex}"));
 
     let _ = std::fs::remove_dir_all(&temp_dir);
 }
@@ -486,6 +502,27 @@ fn test_cli_gen_verifier_templates() {
         let content = std::fs::read_to_string(&out_file).unwrap();
         assert!(content.contains(expected_content));
     }
+
+    // Verify package generation for a stateful template enables `stored-contract` feature
+    let pkg_dir = temp_dir.join("merkle_pkg");
+    let pkg_out = get_cli_bin()
+        .args([
+            "gen-verifier",
+            "--vk",
+            vk_path.to_str().unwrap(),
+            "--template",
+            "merkle-membership",
+            "--name",
+            "MerkleVerifier",
+            "--out",
+            pkg_dir.to_str().unwrap(),
+        ])
+        .output()
+        .expect("Failed to execute gen-verifier package with template");
+    assert!(pkg_out.status.success());
+    let cargo_toml = std::fs::read_to_string(pkg_dir.join("Cargo.toml")).unwrap();
+    assert!(cargo_toml
+        .contains(r#"astrolabe-verifier = { version = "1.0.0", features = ["stored-contract"] }"#));
 
     let _ = std::fs::remove_dir_all(&temp_dir);
 }
